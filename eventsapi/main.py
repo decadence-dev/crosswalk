@@ -42,7 +42,7 @@ async def list_events(client=Depends(get_client)):
 
 
 @app.post('/events', response_model=Event)
-async def created_event(event_data: EventCreate, client=Depends(get_client)):
+async def create_event(event_data: EventCreate, client=Depends(get_client)):
     event = Event.parse_obj(event_data)
     await client.events.events.insert_one(event.dict())
     return event
