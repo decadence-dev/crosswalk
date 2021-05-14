@@ -5,7 +5,7 @@ from typing import List
 from fastapi import FastAPI, Depends, HTTPException
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from models import Event, EventType, EventUpdate, EventCreate
+from models import Event, EventType, EventUpdate, EventCreate, User
 
 
 app = FastAPI()
@@ -30,6 +30,13 @@ async def shutdown():
     await client.close()
 
 
+async def get_user():
+    return User(
+        id=uuid.uuid4(),
+        name='mockuser'
+    )
+
+
 @app.get('/types', response_model=List[str])
 async def list_types():
     return list(EventType)
@@ -42,10 +49,14 @@ async def list_events(client=Depends(get_client)):
 
 
 @app.post('/events', response_model=Event)
-async def created_event(event_data: EventCreate, client=Depends(get_client)):
-    event = Event.parse_obj(event_data)
-    await client.events.events.insert_one(event.dict())
-    return event
+async def create_event(
+        data: EventCreate,
+        client: AsyncIOMotorClient = Depends(get_client),
+        user: User = Depends(get_user)
+):
+    instance = Event(**data.dict(), created_by=user)
+    await client.events.events.insert_one(instance.dict())
+    return instance
 
 
 @app.get('/events/{pk}', response_model=Event)
@@ -55,12 +66,18 @@ async def retrieve_event(pk: uuid.UUID, client=Depends(get_client)):
 
 
 @app.patch('/events/{pk}', response_model=Event)
-async def update_event(pk: uuid.UUID, event_data: EventUpdate, client=Depends(get_client)):
+async def update_event(
+        pk: uuid.UUID,
+        data: EventUpdate,
+        client=Depends(get_client),
+        user: User = Depends(get_user)
+):
     doc = await client.events.events.find_one({'id': pk})
     if doc is None:
         raise HTTPException(status_code=404, detail='Event not found')
     instance = Event(**doc)
-    updated = instance.copy(update=event_data.dict(exclude_unset=True))
+    updated_data = {**data.dict(exclude_unset=True), 'created_by': user}
+    updated = instance.copy(update=updated_data)
     await client.events.events.update_one({'id': pk}, {'$set': updated.dict()})
     return updated
 
