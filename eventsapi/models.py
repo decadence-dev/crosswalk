@@ -37,7 +37,8 @@ class Event(BaseModel):
     location: Location
     attrachemnts: Optional[List[HttpUrl]] = Field(default_factory=list)
 
-    created_by: User
+    created_by: Optional[User]
+    changed_by: Optional[User]
     created: datetime = Field(default_factory=datetime.now)
     changed: datetime = Field(default_factory=datetime.now)
 

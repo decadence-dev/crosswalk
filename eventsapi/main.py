@@ -54,7 +54,11 @@ async def create_event(
         client: AsyncIOMotorClient = Depends(get_client),
         user: User = Depends(get_user)
 ):
-    instance = Event(**data.dict(), created_by=user)
+    instance = Event(
+        **data.dict(),
+        created_by=user,
+        changed_by=user
+    )
     await client.events.events.insert_one(instance.dict())
     return instance
 
@@ -76,7 +80,7 @@ async def update_event(
     if doc is None:
         raise HTTPException(status_code=404, detail='Event not found')
     instance = Event(**doc)
-    updated_data = {**data.dict(exclude_unset=True), 'created_by': user}
+    updated_data = {**data.dict(exclude_unset=True), 'changed_by': user}
     updated = instance.copy(update=updated_data)
     await client.events.events.update_one({'id': pk}, {'$set': updated.dict()})
     return updated
