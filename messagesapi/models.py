@@ -24,7 +24,6 @@ class Message(BaseModel):
 
 class MessageCreate(BaseModel):
     body: str
-    event: uuid.UUID
     parent: Optional[uuid.UUID]
 
 

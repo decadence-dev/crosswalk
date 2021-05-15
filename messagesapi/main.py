@@ -53,17 +53,19 @@ def ignoremptypipes(*pipelines):
             yield pipeline
 
 
-@app.get('events/{pk}/messages', response_model=List[Message])
+@app.get('/events/{pk}/messages', response_model=List[Message])
 async def list_messages(
         pk: uuid.UUID,
+        is_root: Optional[bool] = False,
         client: AsyncIOMotorClient = Depends(get_client),
-        parent: Optional[List[uuid.UUID]]=Query(None),
+        parent: Optional[List[uuid.UUID]]=Query(None)
 ):
-    pipelines = list(
+    pipelines = [{'$match': {'parent': None if is_root else {'$ne': None}}}]
+    pipelines += list(
         ignoremptypipes(
             {'$match': {'event': pk}},
-            {'$match': {'parent': {'$in': parent}}}
-        )
+            {'$match': {'parent': {'$in': parent}}},
+        ),
     )
     collectiion = client.messages.messages.aggregate(pipelines)
     return [Message(**doc) async for doc in collectiion]
