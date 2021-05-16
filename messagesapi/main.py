@@ -5,6 +5,7 @@ from typing import Optional, List
 
 from fastapi import FastAPI, Depends, Query, HTTPException
 from motor.motor_asyncio import AsyncIOMotorClient
+from pydantic import BaseModel
 
 from models import Message, MessageCreate, MessageUpdate, User
 
@@ -56,11 +57,13 @@ def ignoremptypipes(*pipelines):
 @app.get('/events/{pk}/messages', response_model=List[Message])
 async def list_messages(
         pk: uuid.UUID,
-        is_root: Optional[bool] = False,
+        is_root: Optional[bool] = None,
         client: AsyncIOMotorClient = Depends(get_client),
         parent: Optional[List[uuid.UUID]]=Query(None)
 ):
-    pipelines = [{'$match': {'parent': None if is_root else {'$ne': None}}}]
+    pipelines = []
+    if is_root is not None:
+        pipelines = [{'$match': {'parent': None if is_root else {'$ne': None}}}]
     pipelines += list(
         ignoremptypipes(
             {'$match': {'event': pk}},
