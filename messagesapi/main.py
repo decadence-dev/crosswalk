@@ -69,6 +69,7 @@ async def list_messages(
         pk: uuid.UUID,
         is_root: Optional[bool] = None,
         parent: Optional[List[uuid.UUID]] = Query(None),
+        user: Optional[List[uuid.UUID]] = Query(None),
         sort_by: Optional[SortingField] = None,
         sort_order: SortingOrder = SortingOrder.ASC,
         client: AsyncIOMotorClient = Depends(get_client)
@@ -80,6 +81,7 @@ async def list_messages(
         ignoremptypipes(
             {'$match': {'event': pk}},
             {'$match': {'parent': {'$in': parent}}},
+            {'$match': {'user.id': {'$in': user}}}
         ),
     )
     if sort_by is not None:
