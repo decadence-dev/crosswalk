@@ -18,6 +18,25 @@ services:
     container_name: crosswalk_eventsdb
     image: mongo:4.4.5
 
+
+  messagesapi:
+    container_name: crosswalk_messagesapi
+    build:
+      context: messagesapi
+    command: poetry run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./messagesapi:/home/python/messagesapi
+    ports:
+      - 8100:8000
+    environment:
+      - DATABASE_HOST=messagesdb
+    depends_on:
+      - messagesdb
+
+  messagesdb:
+    container_name: crosswalk_messagesdb
+    image: mongo:4.4.5
+
   reactionsapi:
     container_name: crosswalk_reactionsapi
     build:
