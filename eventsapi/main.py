@@ -43,7 +43,9 @@ async def list_types():
 
 
 @app.get('/events', response_model=List[Event])
-async def list_events(client=Depends(get_client)):
+async def list_events(
+        client: AsyncIOMotorClient = Depends(get_client)
+):
     collection = client.events.events.aggregate([])
     return [Event(**itm) async for itm in collection]
 
@@ -64,7 +66,10 @@ async def create_event(
 
 
 @app.get('/events/{pk}', response_model=Event)
-async def retrieve_event(pk: uuid.UUID, client=Depends(get_client)):
+async def retrieve_event(
+        pk: uuid.UUID,
+        client: AsyncIOMotorClient = Depends(get_client)
+):
     doc = await client.events.events.find_one({'id': pk})
     return Event(**doc)
 
@@ -73,7 +78,7 @@ async def retrieve_event(pk: uuid.UUID, client=Depends(get_client)):
 async def update_event(
         pk: uuid.UUID,
         data: EventUpdate,
-        client=Depends(get_client),
+        client: AsyncIOMotorClient = Depends(get_client),
         user: User = Depends(get_user)
 ):
     doc = await client.events.events.find_one({'id': pk})
@@ -87,7 +92,10 @@ async def update_event(
 
 
 @app.delete('/events/{pk}')
-async def delete_event(pk: uuid.UUID, client=Depends(get_client)):
+async def delete_event(
+        pk: uuid.UUID,
+        client: AsyncIOMotorClient = Depends(get_client)
+):
     doc = await client.events.events.find_one({'id': pk})
 
     if doc is None:
