@@ -34,7 +34,7 @@ class Event(BaseModel):
     position: Position
     type: EventType
     description: Optional[str]
-    attrachemnts: Optional[List[HttpUrl]] = Field(default_factory=list)
+    attachments: Optional[List[HttpUrl]] = Field(default_factory=list)
     created_by: Optional[User]
     created: datetime = Field(default_factory=datetime.now)
     changed: datetime = Field(default_factory=datetime.now)
@@ -45,7 +45,6 @@ class EventCreate(BaseModel):
     position: Position
     type: EventType
     description: Optional[str]
-    attrachemnts: Optional[List[HttpUrl]] = Field(default_factory=list)
 
 
 class EventUpdate(BaseModel):
@@ -53,7 +52,7 @@ class EventUpdate(BaseModel):
     position: Optional[Position]
     type: Optional[EventType]
     description: Optional[str]
-    attrachemnts: Optional[List[HttpUrl]] = Field(default_factory=list)
+    attachments: Optional[List[HttpUrl]] = Field(default_factory=list)
 
     @validator('name')
     def validate_name(cls, v):
