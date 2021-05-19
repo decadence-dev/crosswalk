@@ -1,6 +1,7 @@
 import os
 import re
 import uuid
+from enum import Enum
 from typing import Optional, List
 
 from fastapi import FastAPI, Depends, Query, HTTPException
@@ -54,12 +55,23 @@ def ignoremptypipes(*pipelines):
             yield pipeline
 
 
+class SortingField(str, Enum):
+    CREATED = 'created'
+
+
+class SortingOrder(str, Enum):
+    ASC = 'asc'
+    DESC = 'desc'
+
+
 @app.get('/events/{pk}/messages', response_model=List[Message])
 async def list_messages(
         pk: uuid.UUID,
         is_root: Optional[bool] = None,
-        client: AsyncIOMotorClient = Depends(get_client),
-        parent: Optional[List[uuid.UUID]]=Query(None)
+        parent: Optional[List[uuid.UUID]] = Query(None),
+        sort_by: Optional[SortingField] = None,
+        sort_order: SortingOrder = SortingOrder.ASC,
+        client: AsyncIOMotorClient = Depends(get_client)
 ):
     pipelines = []
     if is_root is not None:
@@ -70,6 +82,9 @@ async def list_messages(
             {'$match': {'parent': {'$in': parent}}},
         ),
     )
+    if sort_by is not None:
+        order = 1 if sort_order == SortingOrder.ASC else -1
+        pipelines += [{'$sort': {sort_by.value: order}}]
     collectiion = client.messages.messages.aggregate(pipelines)
     return [Message(**doc) async for doc in collectiion]
 
