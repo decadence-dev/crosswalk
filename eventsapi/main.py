@@ -5,7 +5,7 @@ from typing import List
 from fastapi import FastAPI, Depends, HTTPException
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from models import Event, EventType, EventUpdate, EventCreate
+from models import Event, EventType, EventUpdate, EventCreate, User
 
 
 app = FastAPI()
@@ -30,43 +30,72 @@ async def shutdown():
     await client.close()
 
 
+async def get_user():
+    return User(
+        id=uuid.uuid4(),
+        name='mockuser'
+    )
+
+
 @app.get('/types', response_model=List[str])
 async def list_types():
     return list(EventType)
 
 
 @app.get('/events', response_model=List[Event])
-async def list_events(client=Depends(get_client)):
+async def list_events(
+        client: AsyncIOMotorClient = Depends(get_client)
+):
     collection = client.events.events.aggregate([])
     return [Event(**itm) async for itm in collection]
 
 
 @app.post('/events', response_model=Event)
-async def create_event(event_data: EventCreate, client=Depends(get_client)):
-    event = Event.parse_obj(event_data)
-    await client.events.events.insert_one(event.dict())
-    return event
+async def create_event(
+        data: EventCreate,
+        client: AsyncIOMotorClient = Depends(get_client),
+        user: User = Depends(get_user)
+):
+    instance = Event(
+        **data.dict(),
+        created_by=user,
+        changed_by=user
+    )
+    await client.events.events.insert_one(instance.dict())
+    return instance
 
 
 @app.get('/events/{pk}', response_model=Event)
-async def retrieve_event(pk: uuid.UUID, client=Depends(get_client)):
+async def retrieve_event(
+        pk: uuid.UUID,
+        client: AsyncIOMotorClient = Depends(get_client)
+):
     doc = await client.events.events.find_one({'id': pk})
     return Event(**doc)
 
 
 @app.patch('/events/{pk}', response_model=Event)
-async def update_event(pk: uuid.UUID, event_data: EventUpdate, client=Depends(get_client)):
+async def update_event(
+        pk: uuid.UUID,
+        data: EventUpdate,
+        client: AsyncIOMotorClient = Depends(get_client),
+        user: User = Depends(get_user)
+):
     doc = await client.events.events.find_one({'id': pk})
     if doc is None:
         raise HTTPException(status_code=404, detail='Event not found')
     instance = Event(**doc)
-    updated = instance.copy(update=event_data.dict(exclude_unset=True))
+    updated_data = {**data.dict(exclude_unset=True), 'changed_by': user}
+    updated = instance.copy(update=updated_data)
     await client.events.events.update_one({'id': pk}, {'$set': updated.dict()})
     return updated
 
 
 @app.delete('/events/{pk}')
-async def delete_event(pk: uuid.UUID, client=Depends(get_client)):
+async def delete_event(
+        pk: uuid.UUID,
+        client: AsyncIOMotorClient = Depends(get_client)
+):
     doc = await client.events.events.find_one({'id': pk})
 
     if doc is None:
