@@ -3,10 +3,12 @@ import re
 import uuid
 from typing import Optional, List
 
-from fastapi import FastAPI, Depends, Query
+from fastapi import FastAPI, Depends, Query, HTTPException
 from motor.motor_asyncio import AsyncIOMotorClient
+from pydantic import BaseModel
 
-from models import Message
+from models import Message, MessageCreate, MessageUpdate, User
+
 
 app = FastAPI()
 
@@ -30,6 +32,13 @@ async def shutdown():
     await client.close()
 
 
+async def get_user():
+    return User(
+        id=uuid.uuid4(),
+        name='mockuser'
+    )
+
+
 def ignoremptypipes(*pipelines):
     def get_pipeline_value(pipeline):
         for key, value in pipeline.items():
@@ -45,17 +54,75 @@ def ignoremptypipes(*pipelines):
             yield pipeline
 
 
-@app.get('/messages/{event_pk}', response_model=List[Message])
+@app.get('/events/{pk}/messages', response_model=List[Message])
 async def list_messages(
-        event_pk: uuid.UUID,
-        client=Depends(get_client),
-        parent: Optional[List[uuid.UUID]]=Query(None),
+        pk: uuid.UUID,
+        is_root: Optional[bool] = None,
+        client: AsyncIOMotorClient = Depends(get_client),
+        parent: Optional[List[uuid.UUID]]=Query(None)
 ):
-    pipelines = list(
+    pipelines = []
+    if is_root is not None:
+        pipelines = [{'$match': {'parent': None if is_root else {'$ne': None}}}]
+    pipelines += list(
         ignoremptypipes(
-            {'$match': {'event': event_pk}},
-            {'$match': {'parent': {'$in': parent}}}
-        )
+            {'$match': {'event': pk}},
+            {'$match': {'parent': {'$in': parent}}},
+        ),
     )
     collectiion = client.messages.messages.aggregate(pipelines)
     return [Message(**doc) async for doc in collectiion]
+
+
+@app.post('/events/{pk}/messages', response_model=Message)
+async def create_message(
+        pk: uuid.UUID,
+        data: MessageCreate,
+        client: AsyncIOMotorClient = Depends(get_client),
+        user: User = Depends(get_user)
+):
+    message = Message(
+        **data.dict(),
+        event=pk,
+        user=user
+    )
+    await client.messages.messages.insert_one(message.dict())
+    return message
+
+
+@app.get('/messages/{pk}', response_model=Message)
+async def retrieve_message(
+        pk: uuid.UUID,
+        client: AsyncIOMotorClient = Depends(get_client)
+):
+    doc = await client.messages.messages.find_one({'id': pk})
+    return Message(**doc)
+
+
+@app.patch('/messages/{pk}', response_model=Message)
+async def update_message(
+        pk: uuid.UUID,
+        data: MessageUpdate,
+        client: AsyncIOMotorClient = Depends(get_client)
+):
+    doc = await client.messages.messages.find_one({'id': pk})
+    if doc is None:
+        raise HTTPException(status_code=404, detail='Message not found')
+    instance = Message(**doc)
+    updated = instance.copy(
+        update=data.dict(exclude_unset=True, exclude_none=True)
+    )
+    await client.messages.messages.update_one({'id': pk}, {'$set': updated.dict()})
+    return updated
+
+
+@app.delete('/messages/{pk}')
+async def delete_message(
+        pk: uuid.UUID,
+        client: AsyncIOMotorClient = Depends(get_client)
+):
+    doc = await client.messages.messages.find_one({'id': pk})
+    if doc is None:
+        raise HTTPException(status_code=404, detail='Message not found')
+    await client.messages.messages.delete_one({'id': pk})
+    return 'Ok'
