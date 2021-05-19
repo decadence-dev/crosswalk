@@ -35,7 +35,7 @@ class Event(BaseModel):
 
     address: str
     location: Location
-    attrachemnts: Optional[List[HttpUrl]] = Field(default_factory=list)
+    attachments: Optional[List[HttpUrl]] = Field(default_factory=list)
 
     created_by: Optional[User]
     changed_by: Optional[User]
@@ -64,7 +64,7 @@ class EventUpdate(BaseModel):
 
     address: Optional[str]
     location: Optional[conlist(float, min_items=2, max_items=2)]
-    attrachemnts: Optional[List[HttpUrl]] = Field(default_factory=list)
+    attachments: Optional[List[HttpUrl]] = Field(default_factory=list)
 
     @validator('name')
     def validate_name(cls, v):
