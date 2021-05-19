@@ -27,7 +27,7 @@ services:
     volumes:
       - ./messagesapi:/home/python/messagesapi
     ports:
-      - 8000:8000
+      - 9000:8000
     environment:
       - DATABASE_HOST=messagesdb
     depends_on:
