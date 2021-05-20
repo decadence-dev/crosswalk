@@ -27,7 +27,7 @@ async def startup():
 
 @app.on_event('shutdown')
 async def shutdown():
-    await client.close()
+    client.close()
 
 
 async def get_user():

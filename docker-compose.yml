@@ -27,7 +27,7 @@ services:
     volumes:
       - ./messagesapi:/home/python/messagesapi
     ports:
-      - 9000:8000
+      - 8100:8000
     environment:
       - DATABASE_HOST=messagesdb
     depends_on:
@@ -35,4 +35,22 @@ services:
 
   messagesdb:
     container_name: crosswalk_messagesdb
+    image: mongo:4.4.5
+
+  reactionsapi:
+    container_name: crosswalk_reactionsapi
+    build:
+      context: reactionsapi
+    command: poetry run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+    - ./reactionsapi:/home/python/reactionsapi
+    ports:
+    - 8200:8000
+    environment:
+      - DATABASE_HOST=reactionsdb
+    depends_on:
+      - reactionsdb
+
+  reactionsdb:
+    container_name: crosswalk_reactionsdb
     image: mongo:4.4.5
