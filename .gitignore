@@ -1,2 +1,7 @@
+# Environment
 venv/
 .idea/
+
+# Testing artifacts
+htmlcov/
+.coverage

@@ -1,9 +1,9 @@
 import uuid
 from datetime import datetime
 from enum import Enum
-from typing import Optional, List, Dict, Union
+from typing import Optional, List
 
-from pydantic import BaseModel, Field, HttpUrl, validator, conlist
+from pydantic import BaseModel, Field, HttpUrl, validator, conlist, constr
 
 
 class EventType(str, Enum):
@@ -18,7 +18,7 @@ class EventType(str, Enum):
 
 
 class User(BaseModel):
-    id: uuid.UUID
+    id: uuid.UUID = Field(default_factory=uuid.uuid4)
     name: str
 
 
@@ -44,13 +44,12 @@ class Event(BaseModel):
 
 
 class EventCreate(BaseModel):
-    name: str
+    name: constr(strip_whitespace=True, min_length=1)
     type: EventType
-    description: Optional[str]
+    description: Optional[constr(strip_whitespace=True, min_length=1)]
 
-    address: str
+    address: constr(strip_whitespace=True, min_length=1)
     location: conlist(float, min_items=2, max_items=2)
-    attrachemnts: Optional[List[HttpUrl]] = Field(default_factory=list)
 
     @validator('location')
     def validate_location(cls, v):
@@ -58,16 +57,21 @@ class EventCreate(BaseModel):
 
 
 class EventUpdate(BaseModel):
-    name: Optional[str]
+    name: Optional[constr(strip_whitespace=True, min_length=1)]
     type: Optional[EventType]
-    description: Optional[str]
+    description: Optional[constr(strip_whitespace=True, min_length=1)]
 
-    address: Optional[str]
+    address: Optional[constr(strip_whitespace=True, min_length=1)]
     location: Optional[conlist(float, min_items=2, max_items=2)]
     attachments: Optional[List[HttpUrl]] = Field(default_factory=list)
 
     @validator('name')
     def validate_name(cls, v):
+        assert v is not None
+        return v
+
+    @validator('type')
+    def validate_type(cls, v):
         assert v is not None
         return v
 
@@ -79,8 +83,3 @@ class EventUpdate(BaseModel):
     @validator('location')
     def validate_location(cls, v):
         return Location(coordinates=v)
-
-    @validator('type')
-    def validate_type(cls, v):
-        assert v is not None
-        return v
