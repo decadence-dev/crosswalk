@@ -1,12 +1,12 @@
 version: '3'
 services:
-  eventsapi:
-    container_name: crosswalk_eventsapi
+  events:
+    container_name: crosswalk_events
     build:
-      context: eventsapi
+      context: events
     command: poetry run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     volumes:
-      - ./eventsapi:/home/python/eventsapi
+      - ./events:/home/python/events
     ports:
       - 8000:8000
     environment:

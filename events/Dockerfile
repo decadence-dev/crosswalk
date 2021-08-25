@@ -1,4 +1,4 @@
-FROM python:3.8.8-alpine
+FROM python:3.9-alpine
 
 USER root
 
@@ -12,8 +12,8 @@ RUN pip install poetry
 RUN addgroup -g 1000 -S python && adduser -u 1000 -S python -G python
 USER python
 
-RUN mkdir home/python/eventsapi
-WORKDIR home/python/eventsapi
+RUN mkdir home/python/events
+WORKDIR home/python/events
 
 ADD pyproject.toml .
 RUN poetry install
@@ -22,6 +22,6 @@ USER root
 RUN apk del --no-cache .build-deps
 
 USER python
-COPY --chown=python:python . /home/python/eventsapi
+COPY --chown=python:python . /home/python/events
 
 EXPOSE 8000
