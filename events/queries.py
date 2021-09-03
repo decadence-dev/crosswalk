@@ -28,7 +28,7 @@ class Event(graphene.ObjectType):
         interfaces = (relay.Node,)
 
     name = graphene.String()
-    type = graphene.Enum.from_enum(EventType)
+    type = graphene.Int()
     description = graphene.String()
 
     address = graphene.String()

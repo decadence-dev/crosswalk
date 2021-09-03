@@ -97,7 +97,7 @@ async def test_retrieve(user, event_global_id, event_name):
         query getEvent($id: ID!) {
             event(id: $id) {
                 id
-                name   
+                name
             }
         }
         """,
@@ -128,8 +128,16 @@ async def test_retrieve(user, event_global_id, event_name):
 async def test_create(db, user, input, result):
     response = await graphql(
         """
-        mutation createEvent($name: String!, $type: EventType!, $address: String!, $location: [Float!]!) {
-            createEvent (input: {name: $name, type: $type, address: $address, location: $location}) {
+        mutation createEvent(
+        $name: String!, $type: EventType!, $address: String!, $location: [Float!]!) {
+            createEvent (
+                input: {
+                    name: $name,
+                    type: $type,
+                    address: $address,
+                    location: $location
+                }
+            ) {
                 name
             }
         }
