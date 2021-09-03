@@ -1,4 +1,5 @@
 import uuid
+from enum import Enum
 
 import graphene
 from graphene import relay
@@ -6,7 +7,7 @@ from graphene import relay
 from pagination import SlicelessConnectionField, gen_slice_pipeline
 
 
-class EventType(graphene.Enum):
+class EventType(Enum):
     ROBBERY = 1
     FIGHT = 2
     DEATH = 3
@@ -27,7 +28,7 @@ class Event(graphene.ObjectType):
         interfaces = (relay.Node,)
 
     name = graphene.String()
-    type = EventType()
+    type = graphene.Enum.from_enum(EventType)
     description = graphene.String()
 
     address = graphene.String()
@@ -49,9 +50,15 @@ class EventConnection(relay.Connection):
         node = Event
 
 
+class EventTypeMap(graphene.ObjectType):
+    name = graphene.String()
+    value = graphene.Int()
+
+
 class Query(graphene.ObjectType):
     event = relay.Node.Field(Event)
     events = SlicelessConnectionField(EventConnection)
+    types = graphene.List(EventTypeMap)
 
     @staticmethod
     async def resolve_events(root, info, **kwargs):
@@ -70,3 +77,7 @@ class Query(graphene.ObjectType):
             ]
         )
         return await cursor.next() if await cursor.fetch_next else None
+
+    @staticmethod
+    async def resolve_types(root, info, **kwargs):
+        return EventType

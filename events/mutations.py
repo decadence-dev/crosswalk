@@ -11,7 +11,7 @@ from queries import Event, EventType
 class CreateEventMutation(relay.ClientIDMutation):
     class Input:
         name = graphene.String(required=True)
-        type = EventType(required=True)
+        type = graphene.Enum.from_enum(EventType)(required=True)
         description = graphene.String()
 
         address = graphene.String(required=True)
@@ -42,7 +42,7 @@ class UpdateEventMutation(relay.ClientIDMutation):
     class Input:
         id = graphene.ID(required=True)
         name = graphene.String()
-        type = EventType()
+        type = graphene.Enum.from_enum(EventType)
         description = graphene.String()
 
         address = graphene.String()
