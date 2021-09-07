@@ -2,6 +2,11 @@
 venv/
 .idea/
 
+# Client
+node_modules/
+client/dist
+client/.cache
+
 # Testing artifacts
 htmlcov/
 .coverage
