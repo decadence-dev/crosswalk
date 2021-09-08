@@ -71,7 +71,7 @@ For example:
 ```
 version: '3'
 services:
-  eventsapi:
+  events:
     volumes:
       ...
     ports:
@@ -80,4 +80,4 @@ services:
       ...
 ```
 
-Service eventsapi can be found by url http://localhost:8000/docs
+Service events can be found by url http://localhost:8000/docs
