@@ -1,10 +1,11 @@
 <script>
 import MenuIcon from './icons/menu'
 import NotificationsIcon from './icons/notifications'
+import Navbar from './navbar'
 
 export default {
   name: 'Map',
-  components: {MenuIcon, NotificationsIcon}
+  components: {Navbar, MenuIcon, NotificationsIcon}
 }
 </script>
 
@@ -14,6 +15,9 @@ export default {
       <MenuIcon></MenuIcon>
       <NotificationsIcon></NotificationsIcon>
     </div>
+    <aside class="menu">
+      <Navbar></Navbar>
+    </aside>
   </div>
 </template>
 
@@ -35,5 +39,10 @@ export default {
     top: 16px;
     left: 16px;
     right: 16px;
+  }
+
+  .menu {
+    margin: 56px 16px;
+    text-align: center;
   }
 </style>
