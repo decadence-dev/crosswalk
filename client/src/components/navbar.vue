@@ -1,16 +1,14 @@
 <script>
 export default {
   name: 'Navbar',
-  computed: {
-    links: function () {
-      return [
-          {link: '#', text: 'Profile'},
-          {link: '#', text: 'Settings'},
-          {link: '#', text: 'Feedback'},
-          {link: '#', text: 'Rules'},
-      ]
-    }
-  }
+  data: () => ({
+    links: [
+        {link: '#', text: 'Profile'},
+        {link: '#', text: 'Settings'},
+        {link: '#', text: 'Feedback'},
+        {link: '#', text: 'Rules'},
+    ]
+  })
 }
 </script>
 
