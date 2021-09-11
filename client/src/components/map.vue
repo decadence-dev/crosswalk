@@ -4,11 +4,12 @@ import NotificationsIcon from './icons/notifications'
 import CloseIcon from './icons/close'
 import DashIcon from './icons/dash'
 import Navbar from './navbar'
+import Input from './common/input'
 import {mapState} from "vuex";
 
 export default {
   name: 'Map',
-  components: {Navbar, MenuIcon, CloseIcon, NotificationsIcon, DashIcon},
+  components: {Input, Navbar, MenuIcon, CloseIcon, NotificationsIcon, DashIcon},
   data: () => ({
     isMenuOpened: false,
     isEventsListOpened: false
@@ -62,6 +63,9 @@ export default {
           v-on:click="isEventsListOpened = !isEventsListOpened"
       >
         <DashIcon></DashIcon>
+      </div>
+      <div class="searchbar">
+        <Input id="eventsSearch" name="search" placeholder="Enter address or event name"/>
       </div>
       <div class="items">
         <div
@@ -118,7 +122,8 @@ export default {
     position: absolute;
     bottom: 0;
     width: 100%;
-    height: 48px;
+    //height: 48px;
+    padding: 0 0 32px;
     border-radius: 8px 8px 0 0;
     background-color: $black;
     overflow: hidden;
@@ -136,10 +141,18 @@ export default {
       background-color: $yellow;
     }
 
+    .searchbar {
+      display: flex;
+      flex-flow: column;
+      align-items: stretch;
+      padding: 0 16px;
+      margin: 24px 0 0;
+    }
+
     .items {
       display: flex;
       flex-flow: column;
-      margin: 24px 0 32px 0;
+      margin: 24px 0 0;
 
       .item {
         display: flex;
