@@ -17,40 +17,49 @@ const client = new ApolloClient({
   cache: new InMemoryCache()
 })
 
+const EVENTS_QUERY = gql`
+  query events($search: String, $first: Int, $after: String) {
+    events (search: $search, first: $first, after: $after) {
+       pageInfo {
+        endCursor
+        hasNextPage
+      }
+      edges{
+        node {
+          id
+          name
+          address
+        }
+      }
+    }
+  }
+`
+
 export default {
   state:{
     events: [],
-    eventsInfo: {}
+    pageInfo: {},
   },
   mutations: {
     setEvents(state, data) {
       state.events = data.events.edges.map(edge => (edge.node))
-      state.eventsInfo = data.pageInfo
+      state.hasNextPage = data.events.pageInfo.hasNextPage
+      state.endCursor = data.events.pageInfo.endCursor
+    },
+    updateEvents(state, data) {
+      state.events = [...state.events, ...data.events.edges.map(edge => (edge.node))]
+      state.hasNextPage = data.events.pageInfo.hasNextPage
+      state.endCursor = data.events.pageInfo.endCursor
     }
   },
   actions: {
     async getEvents({ commit }, variables = {}) {
-      const query = gql`
-        query events($search: String) {
-          events (search: $search){
-             pageInfo {
-              startCursor
-              endCursor
-              hasNextPage
-              hasPreviousPage
-            }
-            edges{
-              node {
-                id
-                name
-                address
-              }
-            }
-          }
-        }
-       `
-      const response = await client.query({query, variables})
+      const response = await client.query({query: EVENTS_QUERY, variables})
       commit('setEvents', response.data)
+    },
+    async fetchMoreEvents({ commit }, variables = {}) {
+      const response = await client.query({query: EVENTS_QUERY, variables})
+      commit('updateEvents', response.data)
     }
   }
 }

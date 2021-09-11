@@ -7,6 +7,8 @@ from graphql_relay.connection.arrayconnection import (
 
 
 def limitskip(count, **kwargs):
+    # TODO fix limit/offset calculation logic
+    #  Currently it acts wrong.
     limit = count
     skip = get_offset_with_default(kwargs.get("after"))
 
@@ -21,40 +23,17 @@ def limitskip(count, **kwargs):
     return limit, skip
 
 
-def gen_slice_pipeline(field, *fields, **kwargs):
-    skip = get_offset_with_default(kwargs.get("after"))
-    fields_project = {fld: 1 for fld in fields}
-    if after := kwargs.get("after"):
-        after_value = get_offset_with_default(after)
-        yield {
-            "$project": {
-                field: {
-                    "$slice": [f"${field}", {"$subtract": [after_value, "$count"]}]
-                },
-                **fields_project,
-            }
-        }
-
-    if before := kwargs.get("before"):
-        before_value = get_offset_with_default(before)
-        yield {
-            "$project": {
-                field: {"$slice": [f"${field}", before_value - skip - 1]},
-                **fields_project,
-            }
-        }
-
-    if first := kwargs.get("first"):
-        yield {"$project": {field: {"$slice": [f"${field}", first]}, **fields_project}}
-    elif last := kwargs.get("last"):
-        yield {"$project": {field: {"$slice": [f"${field}", -last]}, **fields_project}}
-
-
 class MotorConnectionField(relay.ConnectionField):
     @classmethod
     async def resolve_connection(cls, connection_type, args, resolved):
         cursor, count = resolved
         limit, skip = limitskip(count, **args)
+
+        if limit:
+            cursor.limit(limit)
+
+        if skip:
+            cursor.skip(skip)
 
         edges = [
             connection_type.Edge(node=doc, cursor=offset_to_cursor(skip + idx))

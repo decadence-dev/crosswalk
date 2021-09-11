@@ -5,11 +5,12 @@ import CloseIcon from './icons/close'
 import DashIcon from './icons/dash'
 import Navbar from './navbar'
 import Input from './common/input'
+import Button from './common/button'
 import {mapState} from "vuex";
 
 export default {
   name: 'Map',
-  components: {Input, Navbar, MenuIcon, CloseIcon, NotificationsIcon, DashIcon},
+  components: {Input, Button, Navbar, MenuIcon, CloseIcon, NotificationsIcon, DashIcon},
   data: () => ({
     isMenuOpened: false,
     isEventsListOpened: false
@@ -38,12 +39,26 @@ export default {
     },
     searchSubmit(e) {
       e.preventDefault()
-      this.$store.dispatch('getEvents', {...this.query})
+      this.$store.dispatch(
+          'getEvents',
+          {...this.query, first: 10}
+      )
+    },
+    fetchMore(e) {
+      e.preventDefault()
+      this.$store.dispatch(
+          'fetchMoreEvents',
+          {
+            ...this.query,
+            after: this.$store.state.endCursor,
+            first: 10
+          }
+      )
     }
   },
   mounted() {
     this.login()
-    this.$store.dispatch('getEvents')
+    this.$store.dispatch('getEvents', {first: 10})
   }
 }
 </script>
@@ -97,6 +112,14 @@ export default {
           <span class="item__address">
             {{ event.address }}
           </span>
+        </div>
+        <div class="items__fetch-more">
+          <Button
+              v-show="this.$store.state.hasNextPage"
+              @click.native="fetchMore"
+          >
+            Fetch more
+          </Button>
         </div>
       </div>
     </div>
@@ -180,7 +203,7 @@ export default {
       .item {
         display: flex;
         flex-flow: column nowrap;
-        margin: 0 0 8px;
+        margin: 8px 0 0;
         padding: 4px 16px;
 
         &:hover {
@@ -191,7 +214,7 @@ export default {
           }
         }
 
-        &:last-child {
+        &:first-child {
           margin: 0;
         }
 
@@ -204,6 +227,13 @@ export default {
         &__address {
           font-size: 12px;
         }
+      }
+
+      .items__fetch-more {
+        display: flex;
+        flex-flow: column;
+        align-items: center;
+        margin: 24px 0 0;
       }
     }
   }

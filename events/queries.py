@@ -4,7 +4,7 @@ from enum import Enum
 import graphene
 from graphene import relay
 
-from pagination import MotorConnectionField, gen_slice_pipeline
+from pagination import MotorConnectionField
 
 
 class EventType(Enum):
@@ -68,11 +68,7 @@ class Query(graphene.ObjectType):
 
         collection = info.context["db"].events
         count = await collection.count_documents(filter)
-        cursor = collection.aggregate([
-            {'$match': filter},
-            *gen_slice_pipeline("docs", "count", **kwargs),
-            {"$project": {"_id": 0, "docs._id": 0}}
-        ])
+        cursor = collection.find(filter, {"_id": 0})
         return cursor, count
 
     @staticmethod

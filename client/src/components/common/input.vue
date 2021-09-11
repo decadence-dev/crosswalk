@@ -37,7 +37,7 @@ export default {
   border: 1px solid $yellow;
   background-color: transparent;
   font: 14px sans-serif;
-  color: white;
+  color: $white;
 
   &:focus {
     outline: none;
