@@ -17,7 +17,15 @@ export default {
   computed: {
     ...mapState({
       events: state => state.events
-    })
+    }),
+    query: {
+      get() {
+        return this.$route.query || {}
+      },
+      set(value) {
+        this.query = value
+      }
+    }
   },
   methods: {
     login() {
@@ -27,6 +35,10 @@ export default {
               localStorage.setItem("token", data)
             })
           })
+    },
+    searchSubmit(e) {
+      e.preventDefault()
+      this.$store.dispatch('getEvents', {...this.query})
     }
   },
   mounted() {
@@ -64,9 +76,16 @@ export default {
       >
         <DashIcon></DashIcon>
       </div>
-      <div class="searchbar">
-        <Input id="eventsSearch" name="search" placeholder="Enter address or event name"/>
-      </div>
+      <form
+          class="searchbar"
+          @submit="searchSubmit"
+      >
+        <Input
+            v-model="query.search"
+            name="search"
+            placeholder="Enter address or event name"
+        />
+      </form>
       <div class="items">
         <div
             class="item"

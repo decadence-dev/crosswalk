@@ -1,5 +1,6 @@
 <script>
 export default {
+  inheritAttrs: false,
   name: "Input",
   props: {
     name: {
@@ -17,7 +18,15 @@ export default {
 </script>
 
 <template lang="html">
-  <input :name="name" :placeholder="placeholder" class="input" type="text">
+  <input
+      class="input"
+      type="text"
+      v-on="$listeners"
+      @input="$emit('update', $event.target.value)"
+      :name="name"
+      :value="value"
+      :placeholder="placeholder"
+  >
 </template>
 
 <style lang="scss">

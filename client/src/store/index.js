@@ -29,11 +29,10 @@ export default {
     }
   },
   actions: {
-    async getEvents({ commit }) {
-      const response = await client.query({
-        query: gql`
-        query events {
-          events{
+    async getEvents({ commit }, variables = {}) {
+      const query = gql`
+        query events($search: String) {
+          events (search: $search){
              pageInfo {
               startCursor
               endCursor
@@ -49,9 +48,16 @@ export default {
             }
           }
         }
-        `
-      })
+       `
+      const response = await client.query({query, variables})
       commit('setEvents', response.data)
     }
+    // async searchEvents({ commit }, filter) {
+    //
+    //
+    //   debugger
+    //   const response = await client.query({query, variables})
+    //   commit('setEvents', response.data)
+    // }
   }
 }

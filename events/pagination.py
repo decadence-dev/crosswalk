@@ -50,17 +50,15 @@ def gen_slice_pipeline(field, *fields, **kwargs):
         yield {"$project": {field: {"$slice": [f"${field}", -last]}, **fields_project}}
 
 
-class SlicelessConnectionField(relay.ConnectionField):
+class MotorConnectionField(relay.ConnectionField):
     @classmethod
     async def resolve_connection(cls, connection_type, args, resolved):
-        resolved = resolved or {}
-        data = resolved.get("docs", [])
-        count = resolved.get("count", 0)
+        cursor, count = resolved
         limit, skip = limitskip(count, **args)
 
         edges = [
             connection_type.Edge(node=doc, cursor=offset_to_cursor(skip + idx))
-            for idx, doc in enumerate(data, 1)
+            for idx, doc in enumerate([_ async for _ in cursor], 1)
         ]
 
         first_edge_cursor = edges[0].cursor if edges else None
