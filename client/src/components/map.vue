@@ -139,9 +139,12 @@ export default {
 
   .events-list {
     position: absolute;
+    display: flex;
+    flex-flow: column;
     bottom: 0;
     width: 100%;
-    //height: 48px;
+    height: 48px;
+    max-height: calc(100% - 56px);;
     padding: 0 0 32px;
     border-radius: 8px 8px 0 0;
     background-color: $black;
@@ -154,24 +157,25 @@ export default {
     &__header {
       position: relative;
       display: flex;
-      height: 48px;
+      padding: 12px 0;
       align-items: center;
       justify-content: center;
       background-color: $yellow;
     }
 
     .searchbar {
+      position: relative;
       display: flex;
       flex-flow: column;
       align-items: stretch;
-      padding: 0 16px;
-      margin: 24px 0 0;
+      padding: 24px 16px;
+      margin: 0;
     }
 
     .items {
       display: flex;
       flex-flow: column;
-      margin: 24px 0 0;
+      overflow-y: scroll;
 
       .item {
         display: flex;

@@ -52,12 +52,5 @@ export default {
       const response = await client.query({query, variables})
       commit('setEvents', response.data)
     }
-    // async searchEvents({ commit }, filter) {
-    //
-    //
-    //   debugger
-    //   const response = await client.query({query, variables})
-    //   commit('setEvents', response.data)
-    // }
   }
 }
