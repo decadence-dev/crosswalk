@@ -4,6 +4,7 @@ import NotificationsIcon from './icons/notifications'
 import CloseIcon from './icons/close'
 import DashIcon from './icons/dash'
 import Navbar from './navbar'
+import {mapState} from "vuex";
 
 export default {
   name: 'Map',
@@ -11,7 +12,26 @@ export default {
   data: () => ({
     isMenuOpened: false,
     isEventsListOpened: false
-  })
+  }),
+  computed: {
+    ...mapState({
+      events: state => state.events
+    })
+  },
+  methods: {
+    login() {
+      fetch('http://localhost:8000/token', {method: "POST"})
+          .then(response => {
+            response.json().then(data => {
+              localStorage.setItem("token", data)
+            })
+          })
+    }
+  },
+  mounted() {
+    this.login()
+    this.$store.dispatch('getEvents')
+  }
 }
 </script>
 
@@ -43,6 +63,19 @@ export default {
       >
         <DashIcon></DashIcon>
       </div>
+      <div class="items">
+        <div
+            class="item"
+            v-for="event in events"
+        >
+          <span class="item__name">
+            {{ event.name }}
+          </span>
+          <span class="item__address">
+            {{ event.address }}
+          </span>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -59,6 +92,7 @@ export default {
   }
 
   .header {
+    z-index: 1000;
     position: absolute;
     display: flex;
     justify-content: space-between;
@@ -68,10 +102,12 @@ export default {
   }
 
   .menu {
+    z-index: 100;
     display: none;
     height: 100%;
     padding: 56px 16px;
     text-align: center;
+    background-color: $black;
 
     &_opened{
       display: block;
@@ -80,8 +116,6 @@ export default {
 
   .events-list {
     position: absolute;
-    display: flex;
-    flex-flow: column;
     bottom: 0;
     width: 100%;
     height: 48px;
@@ -100,6 +134,41 @@ export default {
       align-items: center;
       justify-content: center;
       background-color: $yellow;
+    }
+
+    .items {
+      display: flex;
+      flex-flow: column;
+      margin: 24px 0 32px 0;
+
+      .item {
+        display: flex;
+        flex-flow: column nowrap;
+        margin: 0 0 8px;
+        padding: 4px 16px;
+
+        &:hover {
+          background-color: $yellow;
+
+          & > span {
+            color: $black;
+          }
+        }
+
+        &:last-child {
+          margin: 0;
+        }
+
+        &__name {
+          display: block;
+          margin: 0 0 4px 0;
+          color: $yellow;
+        }
+
+        &__address {
+          font-size: 12px;
+        }
+      }
     }
   }
 </style>

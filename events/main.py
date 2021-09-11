@@ -9,6 +9,7 @@ from jose import JWTError, jwt
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from starlette import status
 from starlette.graphql import GraphQLApp
+from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 
 from mutations import Mutation
@@ -20,6 +21,10 @@ SECRET_KEY = os.getenv("SECRET_KEY", "secret")
 DATABASE_HOST = os.getenv("DATABASE_HOST", "localhost")
 DATABASE_PORT = os.getenv("DATABASE_PORT", 27017)
 DATABASE_NAME = os.getenv("DATABASE_NAME", "crosswalk")
+
+ORIGINS = [
+    "*"
+]
 
 
 app = FastAPI()
@@ -69,6 +74,15 @@ class MiddlewareSchema(graphene.Schema):
     def execute(self, *args, **kwargs):
         kwargs.update(middleware=self._middleware)
         return super(MiddlewareSchema, self).execute(*args, **kwargs)
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 schema = MiddlewareSchema(
