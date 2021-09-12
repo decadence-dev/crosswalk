@@ -1,21 +1,38 @@
 version: '3'
+
 services:
-  events:
-    container_name: crosswalk_events
+  client:
+    build: ./client
+    command: npm start
+    volumes:
+    - ./client/dist:/home/node/app/dist
+    - ./client/src:/home/node/app/src
+    - ./client/.babelrc:/home/node/app/.babelrc
+    - ./client/Dockerfile:/home/node/app/Dockerfile
+    - ./client/package.json:/home/node/app/package.json
+    - ./client/package-lock.json:/home/node/app/package-lock.json
+    ports:
+      - 1234:1234
+      - 8080:8080
+    depends_on:
+      - api
+
+  api:
+    container_name: crosswalk_api
     build:
-      context: events
+      context: api
     command: poetry run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     volumes:
-      - ./events:/home/python/events
+      - ./api:/home/python/api
     ports:
       - 8000:8000
     environment:
-      - DATABASE_HOST=eventsdb
+      - DATABASE_HOST=apidb
     depends_on:
-      - eventsdb
+      - apidb
 
-  eventsdb:
-    container_name: crosswalk_eventsdb
+  apidb:
+    container_name: crosswalk_apidb
     image: mongo:4.4.5
 
 
