@@ -1,3 +1,4 @@
+import re
 import uuid
 from enum import Enum
 
@@ -64,7 +65,9 @@ class Query(graphene.ObjectType):
     async def resolve_events(root, info, **kwargs):
         filter = {}
         if value := kwargs.get("search"):
-            filter = dict(filter, name=value)
+            # TODO replace filter with mongo text index
+            pattern = re.compile(f".*{value}.*", re.IGNORECASE)
+            filter.update({"$or": [{"name": pattern}, {"address": pattern}]})
 
         collection = info.context["db"].events
         count = await collection.count_documents(filter)
