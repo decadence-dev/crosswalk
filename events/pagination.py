@@ -7,8 +7,15 @@ from graphql_relay.connection.arrayconnection import (
 
 
 def limitskip(count, **kwargs):
-    # TODO fix limit/offset calculation logic
-    #  Currently it acts wrong.
+    """
+    Return limit/offest values for mongo cursor.
+
+    Args:
+        first (int): limit of documents in the query
+        last (int): limit of documents in the query from the end of the collection
+        after (str): skip of ducuments in the query, expects base64 string
+        before (str): skip of documents in the query from the end, expects base64 string
+    """
     limit = count
     skip = get_offset_with_default(kwargs.get("after"))
 
@@ -16,7 +23,7 @@ def limitskip(count, **kwargs):
         limit = get_offset_with_default(before) - 1
 
     if first := kwargs.get("first"):
-        limit = min(skip + first, limit)
+        limit = min(first, limit)
     elif last := kwargs.get("last"):
         skip = max(limit - last, skip)
 
@@ -24,8 +31,21 @@ def limitskip(count, **kwargs):
 
 
 class MotorConnectionField(relay.ConnectionField):
+    """Mongo Motor relay ConnectionField implementation."""
+
     @classmethod
     async def resolve_connection(cls, connection_type, args, resolved):
+        """
+        Resolve connection object with pagination.
+
+        Args:
+            connection_type: relay connection type
+            args (dict): query arguments
+            resolved (tuple): pair of mongo motor collection cursor and count values
+
+        Returns:
+            relay.Connection: connection_type with query limited by limit and offset
+        """
         cursor, count = resolved
         limit, skip = limitskip(count, **args)
 

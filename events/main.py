@@ -22,9 +22,7 @@ DATABASE_HOST = os.getenv("DATABASE_HOST", "localhost")
 DATABASE_PORT = os.getenv("DATABASE_PORT", 27017)
 DATABASE_NAME = os.getenv("DATABASE_NAME", "crosswalk")
 
-ORIGINS = [
-    "*"
-]
+ORIGINS = ["*"]
 
 
 app = FastAPI()

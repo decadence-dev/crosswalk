@@ -63,7 +63,7 @@ class Query(graphene.ObjectType):
     @staticmethod
     async def resolve_events(root, info, **kwargs):
         filter = {}
-        if value := kwargs.get('search'):
+        if value := kwargs.get("search"):
             filter = dict(filter, name=value)
 
         collection = info.context["db"].events
