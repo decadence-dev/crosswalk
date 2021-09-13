@@ -9,7 +9,7 @@ WORKDIR home/node/app
 
 ADD package.json .
 ADD package-lock.json .
-RUN npm install -g
+RUN npm install
 
 USER node
 
