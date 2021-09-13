@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "events"
+name = "api"
 version = "0.1.0"
 description = ""
 authors = ["Anton Petrov <marblemonolit@gmail.com>"]

@@ -25,15 +25,17 @@ export default {
 </template>
 
 <style lang="scss">
-  .navbar {
-    font: 16px sans-serif;
+@import "../styles/variables";
 
-    .navlink {
-      margin: 0 0 16px;
+.navbar {
+  font: $main;
 
-      &:last-child {
-        margin: 0;
-      }
+  .navlink {
+    margin: 0 0 16px;
+
+    &:last-child {
+      margin: 0;
     }
   }
+}
 </style>

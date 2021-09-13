@@ -19,6 +19,11 @@ export default {
     ...mapState({
       events: state => state.events
     }),
+    hasEvents: {
+      get() {
+        return this.$store.state.events.length !== 0
+      }
+    },
     query: {
       get() {
         return this.$route.query || {}
@@ -101,7 +106,10 @@ export default {
             placeholder="Enter address or event name"
         />
       </form>
-      <div class="items">
+      <div
+          class="items"
+          v-show="hasEvents"
+      >
         <div
             class="item"
             v-for="event in events"
@@ -122,119 +130,127 @@ export default {
           </Button>
         </div>
       </div>
+      <span v-show="!hasEvents" class="events-list__empty">No events found</span>
     </div>
   </div>
 </template>
 
 <style lang="scss">
-  @import "src/styles/variables";
-  .map {
+@import "src/styles/variables";
+
+.map {
+  position: relative;
+  display: flex;
+  flex-flow: column wrap;
+  flex: 1 0 auto;
+  max-width: 100%;
+  background-color: $black;
+}
+
+.header {
+  z-index: 1000;
+  position: absolute;
+  display: flex;
+  justify-content: space-between;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+}
+
+.menu {
+  z-index: 100;
+  display: none;
+  height: 100%;
+  padding: 56px 16px;
+  text-align: center;
+  background-color: $black;
+
+  &_opened{
+    display: block;
+  }
+}
+
+.events-list {
+  position: absolute;
+  display: flex;
+  flex-flow: column;
+  bottom: 0;
+  width: 100%;
+  height: 48px;
+  max-height: calc(100% - 56px);;
+  padding: 0 0 32px;
+  border-radius: 8px 8px 0 0;
+  background-color: $black;
+  overflow: hidden;
+
+  &_opened {
+    height: calc(100% - 56px);
+  }
+
+  &__header {
     position: relative;
     display: flex;
-    flex-flow: column wrap;
-    flex: 1 0 auto;
-    max-width: 100%;
-    background-color: $black;
+    padding: 12px 0;
+    align-items: center;
+    justify-content: center;
+    background-color: $yellow;
   }
 
-  .header {
-    z-index: 1000;
-    position: absolute;
-    display: flex;
-    justify-content: space-between;
-    top: 16px;
-    left: 16px;
-    right: 16px;
-  }
-
-  .menu {
-    z-index: 100;
-    display: none;
-    height: 100%;
-    padding: 56px 16px;
+  &__empty {
+    font: $main;
+    color: $yellow;
     text-align: center;
-    background-color: $black;
-
-    &_opened{
-      display: block;
-    }
   }
 
-  .events-list {
-    position: absolute;
+  .searchbar {
+    position: relative;
     display: flex;
     flex-flow: column;
-    bottom: 0;
-    width: 100%;
-    height: 48px;
-    max-height: calc(100% - 56px);;
-    padding: 0 0 32px;
-    border-radius: 8px 8px 0 0;
-    background-color: $black;
-    overflow: hidden;
+    align-items: stretch;
+    padding: 24px 16px;
+    margin: 0;
+  }
 
-    &_opened {
-      height: calc(100% - 56px);
+  .items {
+    display: flex;
+    flex-flow: column;
+    overflow-y: scroll;
+
+    .item {
+      display: flex;
+      flex-flow: column nowrap;
+      margin: 8px 0 0;
+      padding: 4px 16px;
+
+      &:hover {
+        background-color: $yellow;
+
+        & > span {
+          color: $black;
+        }
+      }
+
+      &:first-child {
+        margin: 0;
+      }
+
+      &__name {
+        display: block;
+        margin: 0 0 4px 0;
+        color: $yellow;
+      }
+
+      &__address {
+        font-size: 12px;
+      }
     }
 
-    &__header {
-      position: relative;
+    .items__fetch-more {
       display: flex;
-      padding: 12px 0;
+      flex-flow: column;
       align-items: center;
-      justify-content: center;
-      background-color: $yellow;
-    }
-
-    .searchbar {
-      position: relative;
-      display: flex;
-      flex-flow: column;
-      align-items: stretch;
-      padding: 24px 16px;
-      margin: 0;
-    }
-
-    .items {
-      display: flex;
-      flex-flow: column;
-      overflow-y: scroll;
-
-      .item {
-        display: flex;
-        flex-flow: column nowrap;
-        margin: 8px 0 0;
-        padding: 4px 16px;
-
-        &:hover {
-          background-color: $yellow;
-
-          & > span {
-            color: $black;
-          }
-        }
-
-        &:first-child {
-          margin: 0;
-        }
-
-        &__name {
-          display: block;
-          margin: 0 0 4px 0;
-          color: $yellow;
-        }
-
-        &__address {
-          font-size: 12px;
-        }
-      }
-
-      .items__fetch-more {
-        display: flex;
-        flex-flow: column;
-        align-items: center;
-        margin: 24px 0 0;
-      }
+      margin: 24px 0 0;
     }
   }
+}
 </style>

@@ -31,12 +31,13 @@ export default {
 
 <style lang="scss">
 @import "../../styles/variables";
+
 .input {
   padding: 8px 12px;
   border-radius: 8px;
   border: 1px solid $yellow;
   background-color: transparent;
-  font: 14px sans-serif;
+  font: $input;
   color: $white;
 
   &:focus {

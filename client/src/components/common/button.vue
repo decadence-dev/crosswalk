@@ -13,12 +13,13 @@ export default {
 
 <style lang="scss">
 @import "../../styles/variables";
+
 .button {
   width: fit-content;
   padding: 8px 16px;
   border-radius: 8px;
   background-color: $yellow;
-  font: 12px sans-serif;
+  font: $help;
   color: $black;
 
   &:focus {
