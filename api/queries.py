@@ -1,10 +1,11 @@
+import re
 import uuid
 from enum import Enum
 
 import graphene
 from graphene import relay
 
-from pagination import SlicelessConnectionField, gen_slice_pipeline
+from pagination import MotorConnectionField
 
 
 class EventType(Enum):
@@ -57,26 +58,21 @@ class EventTypeMap(graphene.ObjectType):
 
 class Query(graphene.ObjectType):
     event = relay.Node.Field(Event)
-    events = SlicelessConnectionField(EventConnection)
+    events = MotorConnectionField(EventConnection, search=graphene.String())
     types = graphene.List(EventTypeMap)
 
     @staticmethod
     async def resolve_events(root, info, **kwargs):
+        filter = {}
+        if value := kwargs.get("search"):
+            # TODO replace filter with mongo text index
+            pattern = re.compile(f".*{value}.*", re.IGNORECASE)
+            filter.update({"$or": [{"name": pattern}, {"address": pattern}]})
+
         collection = info.context["db"].events
-        cursor = collection.aggregate(
-            [
-                {
-                    "$group": {
-                        "_id": None,
-                        "count": {"$sum": 1},
-                        "docs": {"$push": "$$ROOT"},
-                    }
-                },
-                *gen_slice_pipeline("docs", "count", **kwargs),
-                {"$project": {"_id": 0, "docs._id": 0}},
-            ]
-        )
-        return await cursor.next() if await cursor.fetch_next else None
+        count = await collection.count_documents(filter)
+        cursor = collection.find(filter, {"_id": 0})
+        return cursor, count
 
     @staticmethod
     async def resolve_types(root, info, **kwargs):

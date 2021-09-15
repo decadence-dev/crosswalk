@@ -1,0 +1,27 @@
+{
+  "name": "client",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "parcel src/index.html --host 0.0.0.0 --hmr-port 8080"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "apollo-boost": "^0.4.9",
+    "graphql-tag": "^2.12.5",
+    "parcel-bundler": "^1.12.5",
+    "vue": "^2.6.14",
+    "vue-hot-reload-api": "^2.3.4",
+    "vue-router": "^3.5.2",
+    "vuex": "^3.6.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.15.5",
+    "@babel/plugin-transform-runtime": "^7.15.0",
+    "@vue/component-compiler-utils": "^3.2.2",
+    "sass": "^1.39.0",
+    "vue-template-compiler": "^2.6.14"
+  }
+}

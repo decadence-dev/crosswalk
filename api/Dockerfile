@@ -12,8 +12,8 @@ RUN pip install poetry
 RUN addgroup -g 1000 -S python && adduser -u 1000 -S python -G python
 USER python
 
-RUN mkdir home/python/events
-WORKDIR home/python/events
+RUN mkdir home/python/app
+WORKDIR home/python/app
 
 ADD pyproject.toml .
 RUN poetry install
@@ -22,6 +22,6 @@ USER root
 RUN apk del --no-cache .build-deps
 
 USER python
-COPY --chown=python:python . /home/python/events
+COPY --chown=python:python . /home/python/app
 
 EXPOSE 8000

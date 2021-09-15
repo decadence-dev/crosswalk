@@ -1,0 +1,51 @@
+<script>
+export default {
+  inheritAttrs: false,
+  name: "Input",
+  props: {
+    name: {
+      type: String,
+      required: true
+    },
+    value: String,
+    placeholder: String
+  },
+  model: {
+    prop: 'value',
+    event: 'update'
+  }
+}
+</script>
+
+<template lang="html">
+  <input
+      class="input"
+      type="text"
+      v-on="$listeners"
+      @input="$emit('update', $event.target.value)"
+      :name="name"
+      :value="value"
+      :placeholder="placeholder"
+  >
+</template>
+
+<style lang="scss">
+@import "../../styles/variables";
+
+.input {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid $yellow;
+  background-color: transparent;
+  font: $input;
+  color: $white;
+
+  &:focus {
+    outline: none;
+  }
+
+  &::placeholder {
+    color: $grey;
+  }
+}
+</style>

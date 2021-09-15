@@ -1,0 +1,22 @@
+@import "variables";
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  min-width: 320px;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  color: $white;
+}

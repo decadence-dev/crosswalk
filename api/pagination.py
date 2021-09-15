@@ -7,6 +7,15 @@ from graphql_relay.connection.arrayconnection import (
 
 
 def limitskip(count, **kwargs):
+    """
+    Return limit/offest values for mongo cursor.
+
+    Args:
+        first (int): limit of documents in the query
+        last (int): limit of documents in the query from the end of the collection
+        after (str): skip of ducuments in the query, expects base64 string
+        before (str): skip of documents in the query from the end, expects base64 string
+    """
     limit = count
     skip = get_offset_with_default(kwargs.get("after"))
 
@@ -14,53 +23,41 @@ def limitskip(count, **kwargs):
         limit = get_offset_with_default(before) - 1
 
     if first := kwargs.get("first"):
-        limit = min(skip + first, limit)
+        limit = min(first, limit)
     elif last := kwargs.get("last"):
         skip = max(limit - last, skip)
 
     return limit, skip
 
 
-def gen_slice_pipeline(field, *fields, **kwargs):
-    skip = get_offset_with_default(kwargs.get("after"))
-    fields_project = {fld: 1 for fld in fields}
-    if after := kwargs.get("after"):
-        after_value = get_offset_with_default(after)
-        yield {
-            "$project": {
-                field: {
-                    "$slice": [f"${field}", {"$subtract": [after_value, "$count"]}]
-                },
-                **fields_project,
-            }
-        }
+class MotorConnectionField(relay.ConnectionField):
+    """Mongo Motor relay ConnectionField implementation."""
 
-    if before := kwargs.get("before"):
-        before_value = get_offset_with_default(before)
-        yield {
-            "$project": {
-                field: {"$slice": [f"${field}", before_value - skip - 1]},
-                **fields_project,
-            }
-        }
-
-    if first := kwargs.get("first"):
-        yield {"$project": {field: {"$slice": [f"${field}", first]}, **fields_project}}
-    elif last := kwargs.get("last"):
-        yield {"$project": {field: {"$slice": [f"${field}", -last]}, **fields_project}}
-
-
-class SlicelessConnectionField(relay.ConnectionField):
     @classmethod
     async def resolve_connection(cls, connection_type, args, resolved):
-        resolved = resolved or {}
-        data = resolved.get("docs", [])
-        count = resolved.get("count", 0)
+        """
+        Resolve connection object with pagination.
+
+        Args:
+            connection_type: relay connection type
+            args (dict): query arguments
+            resolved (tuple): pair of mongo motor collection cursor and count values
+
+        Returns:
+            relay.Connection: connection_type with query limited by limit and offset
+        """
+        cursor, count = resolved
         limit, skip = limitskip(count, **args)
+
+        if limit:
+            cursor.limit(limit)
+
+        if skip:
+            cursor.skip(skip)
 
         edges = [
             connection_type.Edge(node=doc, cursor=offset_to_cursor(skip + idx))
-            for idx, doc in enumerate(data, 1)
+            for idx, doc in enumerate([_ async for _ in cursor], 1)
         ]
 
         first_edge_cursor = edges[0].cursor if edges else None
