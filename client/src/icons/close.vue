@@ -1,7 +1,7 @@
 <script>
 export default {
-  name: 'CloseIcon'
-}
+  name: 'CloseIcon',
+};
 </script>
 
 <template lang="html">

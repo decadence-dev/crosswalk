@@ -1,7 +1,7 @@
 <script>
 export default {
-  name: 'NotificationsIcon'
-}
+  name: 'NotificationsIcon',
+};
 </script>
 
 <template lang="html">

@@ -1,20 +1,20 @@
 <script>
 export default {
   inheritAttrs: false,
-  name: "Input",
+  name: 'Input',
   props: {
     name: {
       type: String,
-      required: true
+      required: true,
     },
     value: String,
-    placeholder: String
+    placeholder: String,
   },
   model: {
     prop: 'value',
-    event: 'update'
-  }
-}
+    event: 'update',
+  },
+};
 </script>
 
 <template lang="html">
@@ -30,7 +30,7 @@ export default {
 </template>
 
 <style lang="scss">
-@import "../../styles/variables";
+@import "../styles/variables";
 
 .input {
   padding: 8px 12px;

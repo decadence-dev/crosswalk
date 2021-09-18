@@ -1,8 +1,8 @@
 <script>
 export default {
   inheritAttrs: false,
-  name: "Button",
-}
+  name: 'Button',
+};
 </script>
 
 <template lang="html">
@@ -12,7 +12,7 @@ export default {
 </template>
 
 <style lang="scss">
-@import "../../styles/variables";
+@import "../styles/variables";
 
 .button {
   width: fit-content;

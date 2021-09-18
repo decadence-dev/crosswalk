@@ -2,7 +2,7 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
 
-import Map from './components/map'; // eslint-disable-line import/no-unresolved, import/extensions
+import Map from './views/map'; // eslint-disable-line import/no-unresolved, import/extensions
 
 Vue.use(VueRouter);
 

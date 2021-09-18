@@ -1,12 +1,12 @@
 <script>
 import { mapState } from 'vuex';
-import MenuIcon from './icons/menu.vue';
-import NotificationsIcon from './icons/notifications.vue';
-import CloseIcon from './icons/close.vue';
-import DashIcon from './icons/dash.vue';
-import Navbar from './navbar.vue';
-import Input from './common/input.vue';
-import Button from './common/button.vue';
+import MenuIcon from '../icons/menu.vue';
+import NotificationsIcon from '../icons/notifications.vue';
+import CloseIcon from '../icons/close.vue';
+import DashIcon from '../icons/dash.vue';
+import Navbar from '../components/navbar.vue';
+import Input from '../components/input.vue';
+import Button from '../components/button.vue';
 
 export default {
   name: 'Map',

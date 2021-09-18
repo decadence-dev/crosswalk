@@ -1,7 +1,7 @@
 <script>
 export default {
-  name: 'MenuIcon'
-}
+  name: 'MenuIcon',
+};
 </script>
 
 <template lang="html">
