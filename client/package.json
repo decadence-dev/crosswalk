@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "parcel src/index.html --host 0.0.0.0 --hmr-port 8080"
+    "start": "parcel src/index.html --host 0.0.0.0 --hmr-port 8080",
+    "lint": "npx eslint --fix ./src/**.vue"
   },
   "author": "",
   "license": "ISC",

@@ -1,20 +1,20 @@
 <script>
-import Vue from 'vue'
-import VueRouter from 'vue-router'
+import Vue from 'vue';
+import VueRouter from 'vue-router';
 
-import Map from './components/map'
+import Map from './components/map'; // eslint-disable-line import/no-unresolved, import/extensions
 
-Vue.use(VueRouter)
+Vue.use(VueRouter);
 
 export default {
   name: 'App',
   router: new VueRouter({
     mode: 'history',
     routes: [
-      {name: 'main', path: '/', component: Map}
-    ]
-  })
-}
+      { name: 'main', path: '/', component: Map },
+    ],
+  }),
+};
 </script>
 
 <template>

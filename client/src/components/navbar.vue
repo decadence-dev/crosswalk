@@ -3,19 +3,20 @@ export default {
   name: 'Navbar',
   data: () => ({
     links: [
-        {link: '#', text: 'Profile'},
-        {link: '#', text: 'Settings'},
-        {link: '#', text: 'Feedback'},
-        {link: '#', text: 'Rules'},
-    ]
-  })
-}
+      { link: '/profile', text: 'Profile' },
+      { link: '/settings', text: 'Settings' },
+      { link: '/feedback', text: 'Feedback' },
+      { link: '/rules', text: 'Rules' },
+    ],
+  }),
+};
 </script>
 
 <template lang="html">
   <nav class="navbar">
     <div
         class="navlink"
+        v-bind:key="item.link"
         v-for="item in links"
     >
       <a href="#" class="navlink__link"></a>

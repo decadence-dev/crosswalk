@@ -1,71 +1,73 @@
 <script>
-import MenuIcon from './icons/menu'
-import NotificationsIcon from './icons/notifications'
-import CloseIcon from './icons/close'
-import DashIcon from './icons/dash'
-import Navbar from './navbar'
-import Input from './common/input'
-import Button from './common/button'
-import {mapState} from "vuex";
+import { mapState } from 'vuex';
+import MenuIcon from './icons/menu.vue';
+import NotificationsIcon from './icons/notifications.vue';
+import CloseIcon from './icons/close.vue';
+import DashIcon from './icons/dash.vue';
+import Navbar from './navbar.vue';
+import Input from './common/input.vue';
+import Button from './common/button.vue';
 
 export default {
   name: 'Map',
-  components: {Input, Button, Navbar, MenuIcon, CloseIcon, NotificationsIcon, DashIcon},
+  components: {
+    Input, Button, Navbar, MenuIcon, CloseIcon, NotificationsIcon, DashIcon,
+  },
   data: () => ({
     isMenuOpened: false,
-    isEventsListOpened: false
+    isEventsListOpened: false,
   }),
   computed: {
     ...mapState({
-      events: state => state.events
+      events: (state) => state.events,
     }),
     hasEvents: {
       get() {
-        return this.$store.state.events.length !== 0
-      }
+        return this.$store.state.events.length !== 0;
+      },
     },
     query: {
       get() {
-        return this.$route.query || {}
+        return this.$route.query || {};
       },
       set(value) {
-        this.query = value
-      }
-    }
+        this.query = value;
+      },
+    },
   },
   methods: {
     login() {
-      fetch('http://localhost:8000/token', {method: "POST"})
-          .then(response => {
-            response.json().then(data => {
-              localStorage.setItem("token", data)
-            })
-          })
+      fetch('http://localhost:8000/token', { method: 'POST' })
+        .then((response) => {
+          response.json().then((data) => {
+            localStorage.setItem('token', data);
+          });
+        });
     },
     searchSubmit(e) {
-      e.preventDefault()
+      e.preventDefault();
       this.$store.dispatch(
-          'getEvents',
-          {...this.query, first: 10}
-      )
+        'getEvents',
+        { ...this.query, first: 10 },
+      );
     },
     fetchMore(e) {
-      e.preventDefault()
+      e.preventDefault();
       this.$store.dispatch(
-          'fetchMoreEvents',
-          {
-            ...this.query,
-            after: this.$store.state.endCursor,
-            first: 10
-          }
-      )
-    }
+        'fetchMoreEvents',
+        {
+          ...this.query,
+          after: this.$store.state.endCursor,
+          first: 10,
+        },
+      );
+    },
   },
   mounted() {
-    this.login()
-    this.$store.dispatch('getEvents', {first: 10})
-  }
-}
+    this.login();
+    this.$store.dispatch('getEvents', { first: 10 });
+  },
+};
 </script>
 
 <template lang="html">
@@ -112,6 +114,7 @@ export default {
       >
         <div
             class="item"
+            v-bind:key="event.id"
             v-for="event in events"
         >
           <span class="item__name">
