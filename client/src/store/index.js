@@ -1,21 +1,22 @@
-import { ApolloClient, ApolloLink, HttpLink, InMemoryCache } from 'apollo-boost'
-import gql from 'graphql-tag'
-
+import {
+  ApolloClient, ApolloLink, HttpLink, InMemoryCache,
+} from 'apollo-boost';
+import gql from 'graphql-tag';
 
 const client = new ApolloClient({
   link: new ApolloLink((operation, forward) => {
-    const token = localStorage.getItem('token')
+    const token = localStorage.getItem('token');
     operation.setContext({
       headers: {
-        authorization: token ? `Bearer ${token}`: ''
-      }
-    })
-    return forward(operation)
+        authorization: token ? `Bearer ${token}` : '',
+      },
+    });
+    return forward(operation);
   }).concat(
-    new HttpLink({uri: 'http://localhost:8000'})
+    new HttpLink({ uri: 'http://localhost:8000' }),
   ),
-  cache: new InMemoryCache()
-})
+  cache: new InMemoryCache(),
+});
 
 const EVENTS_QUERY = gql`
   query events($search: String, $first: Int, $after: String) {
@@ -33,33 +34,36 @@ const EVENTS_QUERY = gql`
       }
     }
   }
-`
+`;
 
 export default {
-  state:{
+  state: {
     events: [],
     pageInfo: {},
   },
   mutations: {
+    /* eslint-disable */
     setEvents(state, data) {
-      state.events = data.events.edges.map(edge => (edge.node))
-      state.hasNextPage = data.events.pageInfo.hasNextPage
-      state.endCursor = data.events.pageInfo.endCursor
+      state.events = data.events.edges.map((edge) => (edge.node));
+      state.hasNextPage = data.events.pageInfo.hasNextPage;
+      state.endCursor = data.events.pageInfo.endCursor;
     },
     updateEvents(state, data) {
-      state.events = [...state.events, ...data.events.edges.map(edge => (edge.node))]
-      state.hasNextPage = data.events.pageInfo.hasNextPage
-      state.endCursor = data.events.pageInfo.endCursor
-    }
+      state.events = [...state.events, ...data.events.edges.map((edge) => (edge.node))];
+      state.hasNextPage = data.events.pageInfo.hasNextPage;
+      state.endCursor = data.events.pageInfo.endCursor;
+    },
+    /* eslint-enable */
+
   },
   actions: {
     async getEvents({ commit }, variables = {}) {
-      const response = await client.query({query: EVENTS_QUERY, variables})
-      commit('setEvents', response.data)
+      const response = await client.query({ query: EVENTS_QUERY, variables });
+      commit('setEvents', response.data);
     },
     async fetchMoreEvents({ commit }, variables = {}) {
-      const response = await client.query({query: EVENTS_QUERY, variables})
-      commit('updateEvents', response.data)
-    }
-  }
-}
+      const response = await client.query({ query: EVENTS_QUERY, variables });
+      commit('updateEvents', response.data);
+    },
+  },
+};
