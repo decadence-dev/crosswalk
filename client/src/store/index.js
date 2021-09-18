@@ -18,10 +18,21 @@ const client = new ApolloClient({
   cache: new InMemoryCache(),
 });
 
+const EVENT_QUERY = gql`
+  query getEvent($id: ID!) {
+    event(id: $id) {
+      id
+      name
+      address
+      description
+    }
+  }
+`;
+
 const EVENTS_QUERY = gql`
-  query events($search: String, $first: Int, $after: String) {
+  query geteEvents($search: String, $first: Int, $after: String) {
     events (search: $search, first: $first, after: $after) {
-       pageInfo {
+      pageInfo {
         endCursor
         hasNextPage
       }
@@ -38,11 +49,15 @@ const EVENTS_QUERY = gql`
 
 export default {
   state: {
+    event: {},
     events: [],
     pageInfo: {},
   },
   mutations: {
     /* eslint-disable */
+    setEvent(state, data) {
+      state.event = data.event;
+    },
     setEvents(state, data) {
       state.events = data.events.edges.map((edge) => (edge.node));
       state.hasNextPage = data.events.pageInfo.hasNextPage;
@@ -57,6 +72,10 @@ export default {
 
   },
   actions: {
+    async getEvent({ commit }, variables) {
+      const response = await client.query({ query: EVENT_QUERY, variables });
+      commit('setEvent', response.data);
+    },
     async getEvents({ commit }, variables = {}) {
       const response = await client.query({ query: EVENTS_QUERY, variables });
       commit('setEvents', response.data);

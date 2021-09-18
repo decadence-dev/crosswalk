@@ -5,13 +5,12 @@ import NotificationsIcon from '../icons/notifications.vue';
 import CloseIcon from '../icons/close.vue';
 import DashIcon from '../icons/dash.vue';
 import Navbar from '../components/navbar.vue';
-import Input from '../components/input.vue';
-import Button from '../components/button.vue';
+import EventsList from '../components/events-list.vue';
 
 export default {
   name: 'Map',
   components: {
-    Input, Button, Navbar, MenuIcon, CloseIcon, NotificationsIcon, DashIcon,
+    EventsList, Navbar, MenuIcon, CloseIcon, NotificationsIcon, DashIcon,
   },
   data: () => ({
     isMenuOpened: false,
@@ -88,53 +87,20 @@ export default {
     >
       <Navbar></Navbar>
     </aside>
-    <div
-        class="events-list"
-        v-bind:class="{ 'events-list_opened': isEventsListOpened }"
+    <router-view></router-view>
+    <aside
+        class="events-sidebar"
+        v-bind:class="{ 'events-sidebar_opened': isEventsListOpened }"
     >
       <div
-          class="events-list__header"
+          class="events-sidebar__header"
           v-on:click="isEventsListOpened = !isEventsListOpened"
       >
         <DashIcon></DashIcon>
       </div>
-      <form
-          class="searchbar"
-          @submit="searchSubmit"
-      >
-        <Input
-            v-model="query.search"
-            name="search"
-            placeholder="Enter address or event name"
-        />
-      </form>
-      <div
-          class="items"
-          v-show="hasEvents"
-      >
-        <div
-            class="item"
-            v-bind:key="event.id"
-            v-for="event in events"
-        >
-          <span class="item__name">
-            {{ event.name }}
-          </span>
-          <span class="item__address">
-            {{ event.address }}
-          </span>
-        </div>
-        <div class="items__fetch-more">
-          <Button
-              v-show="this.$store.state.hasNextPage"
-              @click.native="fetchMore"
-          >
-            Fetch more
-          </Button>
-        </div>
-      </div>
-      <span v-show="!hasEvents" class="events-list__empty">No events found</span>
-    </div>
+      <EventsList></EventsList>
+    </aside>
+    <router-view></router-view>
   </div>
 </template>
 
@@ -158,6 +124,7 @@ export default {
   top: 16px;
   left: 16px;
   right: 16px;
+  fill: $yellow;
 }
 
 .menu {
@@ -173,7 +140,7 @@ export default {
   }
 }
 
-.events-list {
+.events-sidebar {
   position: absolute;
   display: flex;
   flex-flow: column;
@@ -197,63 +164,6 @@ export default {
     align-items: center;
     justify-content: center;
     background-color: $yellow;
-  }
-
-  &__empty {
-    font: $main;
-    color: $yellow;
-    text-align: center;
-  }
-
-  .searchbar {
-    position: relative;
-    display: flex;
-    flex-flow: column;
-    align-items: stretch;
-    padding: 24px 16px;
-    margin: 0;
-  }
-
-  .items {
-    display: flex;
-    flex-flow: column;
-    overflow-y: scroll;
-
-    .item {
-      display: flex;
-      flex-flow: column nowrap;
-      margin: 8px 0 0;
-      padding: 4px 16px;
-
-      &:hover {
-        background-color: $yellow;
-
-        & > span {
-          color: $black;
-        }
-      }
-
-      &:first-child {
-        margin: 0;
-      }
-
-      &__name {
-        display: block;
-        margin: 0 0 4px 0;
-        color: $yellow;
-      }
-
-      &__address {
-        font-size: 12px;
-      }
-    }
-
-    .items__fetch-more {
-      display: flex;
-      flex-flow: column;
-      align-items: center;
-      margin: 24px 0 0;
-    }
   }
 }
 </style>
