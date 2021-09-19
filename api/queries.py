@@ -8,6 +8,21 @@ from graphene import relay
 from pagination import MotorConnectionField
 
 
+def get_event_projection():
+    return {
+        "id": 1,
+        "name": 1,
+        "type": 1,
+        "description": 1,
+        "address": 1,
+        "created_by": 1,
+        "created_date": 1,
+        "changed_date": 1,
+        "longitude": {"$arrayElemAt": ["$location.coordinates", 0]},
+        "latitude": {"$arrayElemAt": ["$location.coordinates", -1]},
+    }
+
+
 class EventType(Enum):
     ROBBERY = 1
     FIGHT = 2
@@ -21,7 +36,7 @@ class EventType(Enum):
 
 class User(graphene.ObjectType):
     id = graphene.UUID(required=True)
-    name = graphene.String(required=True)
+    username = graphene.String(required=True)
 
 
 class Event(graphene.ObjectType):
@@ -33,7 +48,8 @@ class Event(graphene.ObjectType):
     description = graphene.String()
 
     address = graphene.String()
-    location = graphene.List(graphene.Float)
+    longitude = graphene.Float()
+    latitude = graphene.Float()
 
     created_by = graphene.Field(User)
     created_date = graphene.DateTime()
@@ -42,7 +58,7 @@ class Event(graphene.ObjectType):
     @staticmethod
     async def get_node(info, id):
         collection = info.context["db"].events
-        doc = await collection.find_one({"id": uuid.UUID(id)}, {"_id": 0})
+        doc = await collection.find_one({"id": uuid.UUID(id)}, get_event_projection())
         return doc
 
 
@@ -71,7 +87,9 @@ class Query(graphene.ObjectType):
 
         collection = info.context["db"].events
         count = await collection.count_documents(filter)
-        cursor = collection.find(filter, {"_id": 0})
+        cursor = collection.find(filter, get_event_projection()).sort(
+            [("created_date", -1)]
+        )
         return cursor, count
 
     @staticmethod
