@@ -107,10 +107,10 @@ export default {
   overflow: hidden;
 
   &__empty {
-  font: $main;
-  color: $yellow;
-  text-align: center;
-}
+    font: $main;
+    color: $yellow;
+    text-align: center;
+  }
 
   .searchbar {
     position: relative;

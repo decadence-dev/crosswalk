@@ -25,6 +25,10 @@ const EVENT_QUERY = gql`
       name
       address
       description
+      createdDate
+      createdBy {
+        username
+      }
     }
   }
 `;

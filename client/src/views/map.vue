@@ -135,7 +135,7 @@ export default {
   text-align: center;
   background-color: $black;
 
-  &_opened{
+  &_opened {
     display: block;
   }
 }
@@ -147,7 +147,7 @@ export default {
   bottom: 0;
   width: 100%;
   height: 48px;
-  max-height: calc(100% - 56px);;
+  max-height: calc(100% - 56px);
   padding: 0 0 32px;
   border-radius: 8px 8px 0 0;
   background-color: $black;

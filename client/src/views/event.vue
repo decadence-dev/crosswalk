@@ -1,13 +1,28 @@
 <script>
 import { mapState } from 'vuex';
 import CloseIcon from '../icons/close.vue';
+import OptionsIcon from '../icons/options.vue';
 
 export default {
   name: 'Event',
-  components: { CloseIcon },
-  computed: mapState({
-    event: (state) => state.event,
-  }),
+  components: { CloseIcon, OptionsIcon },
+  computed: {
+    ...mapState({
+      event: (state) => state.event,
+    }),
+    publicationDate() {
+      const { createdDate } = this.$store.state.event;
+      if (createdDate !== undefined) {
+        const dt = new Date(createdDate);
+        return `${dt.getFullYear()}.${dt.getUTCMonth().toString().padStart(2, '0')}.${dt.getDate().toString().padStart(2, '0')}`;
+      }
+      return '';
+    },
+    publicationAuthor() {
+      const { createdBy } = this.$store.state.event;
+      return createdBy !== undefined ? createdBy.username : '';
+    },
+  },
   methods: {
     getEvent() {
       this.$store.dispatch('getEvent', { id: this.$route.params.id });
@@ -24,7 +39,7 @@ export default {
 
 <template lang="html">
   <aside class="event">
-    <div class="events-sidebar__header">
+    <div class="event__header">
       <router-link
           :to="{name: 'map'}"
           v-slot="{href, navigate}"
@@ -35,9 +50,16 @@ export default {
       <CloseIcon></CloseIcon>
     </div>
     <div class="info">
-      <span class="event__name">{{ event.name }}</span>
-      <span class="event__address">{{ event.address }}</span>
-      <span class="event__description">{{ event.description }}</span>
+      <span class="info__name">{{ event.name }}</span>
+      <span class="info__address">{{ event.address }}</span>
+      <div class="publication">
+        <span class="publication__author">{{ publicationAuthor }}</span>
+        <span class="publication__date">{{ publicationDate }}</span>
+      </div>
+      <span class="info__description">{{ event.description }}</span>
+    </div>
+    <div class="options">
+      <OptionsIcon></OptionsIcon>
     </div>
   </aside>
 </template>
@@ -51,7 +73,7 @@ export default {
   flex-flow: column;
   bottom: 0;
   width: 100%;
-  height: calc(100% - 56px);;
+  height: calc(100% - 56px);
   padding: 0 0 32px;
   border-radius: 8px 8px 0 0;
   background-color: $black;
@@ -65,14 +87,49 @@ export default {
     justify-content: center;
     background-color: $yellow;
     fill: $black;
+
+    .close-link {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+    }
   }
 
-  .close-link {
+  .info {
+    display: flex;
+    flex-flow: column;
+    padding: 24px 16px 0;
+
+    &__name {
+      font: $main;
+      color: $yellow;
+    }
+
+    &__address {
+      font: $header;
+      color: $yellow;
+      margin: 8px 0 0;
+    }
+
+    &__description {
+      font: $main;
+      margin: 16px 0 0;
+    }
+
+    .publication {
+      font: $help;
+      color: $yellow;
+      margin: 8px 0 0;
+    }
+  }
+
+  .options {
     position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    top: 72px;
+    right: 16px;
+    fill: $yellow;
   }
 }
 </style>
