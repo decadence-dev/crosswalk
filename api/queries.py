@@ -43,7 +43,6 @@ class Event(graphene.ObjectType):
     class Meta:
         interfaces = (relay.Node,)
 
-    name = graphene.String()
     type = graphene.Int()
     description = graphene.String()
 
@@ -83,7 +82,7 @@ class Query(graphene.ObjectType):
         if value := kwargs.get("search"):
             # TODO replace filter with mongo text index
             pattern = re.compile(f".*{value}.*", re.IGNORECASE)
-            filter.update({"$or": [{"name": pattern}, {"address": pattern}]})
+            filter.update({"address": pattern})
 
         collection = info.context["db"].events
         count = await collection.count_documents(filter)

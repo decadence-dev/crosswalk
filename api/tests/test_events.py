@@ -1,6 +1,6 @@
 import random
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pytest
 from graphql_relay import to_global_id
@@ -30,21 +30,25 @@ async def event_latitude():
 
 
 @pytest.fixture
+async def event_address():
+    return '!@someTest_address'
+
+
+@pytest.fixture
 async def event_global_id(event_id):
     return to_global_id("Event", str(event_id))
 
 
 @pytest.fixture
 @pytest.mark.usefixtures(
-    "db", "faker", "event_id", "event_name", "event_longitude", "event_latitude", "user"
+    "db", "faker", "event_id", "event_address", "event_longitude", "event_latitude", "user"
 )
-async def event(db, faker, event_id, event_name, event_longitude, event_latitude, user):
+async def event(db, faker, event_id, event_address, event_longitude, event_latitude, user):
     doc = {
         "id": event_id,
-        "name": event_name,
         "type": random.randrange(1, 8),
         "description": faker.text(),
-        "address": faker.address(),
+        "address": event_address,
         "location": {"type": "Point", "coordinates": [event_longitude, event_latitude]},
         "created_by": user,
         "created_date": datetime.now(),
@@ -62,14 +66,13 @@ async def events(db, faker, user):
         for idx in range(0, 100):
             yield {
                 "id": uuid.uuid4(),
-                "name": f"item-{idx}",
                 "type": random.randrange(1, 8),
                 "description": faker.text(),
-                "address": faker.address(),
+                "address": f'address-{idx}',
                 "location": {"type": "Point", "coordinates": [0, 0]},
                 "created_by": user,
-                "created_date": datetime.now(),
-                "changed_date": datetime.now(),
+                "created_date": datetime.now() + timedelta(seconds=1 + idx),
+                "changed_date": datetime.now() + timedelta(seconds=1 + idx),
             }
 
     _events = list(gen_events())
@@ -80,16 +83,15 @@ async def events(db, faker, user):
 
 
 @pytest.fixture
-@pytest.mark.usefixtures("db", "faker", "user")
-async def events_with_sprcific_name(db, faker, user):
+@pytest.mark.usefixtures("db", "faker", "user", 'event_address')
+async def events_with_sprcific_address(db, faker, user, event_address):
     def gen_events():
         for idx in range(1, 21):
             yield {
                 "id": uuid.uuid4(),
-                "name": f"specific-{idx}",
                 "type": random.randrange(1, 8),
                 "description": faker.text(),
-                "address": faker.address(),
+                "address": event_address,
                 "location": {"type": "Point", "coordinates": [0, 0]},
                 "created_by": user,
                 "created_date": datetime.now(),
@@ -126,9 +128,9 @@ async def test_list(user):
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures("user", "events", "events_with_sprcific_name")
+@pytest.mark.usefixtures("user", "events", "events_with_sprcific_address")
 @pytest.mark.parametrize(
-    "variables,expected_count", [({}, 120), ({"search": "specific"}, 20)]
+    "variables,expected_count", [({}, 120), ({"search": '!@someTest_address'}, 20)]
 )
 async def test_list_search(user, variables, expected_count):
     response = await graphql(
@@ -160,7 +162,7 @@ async def test_events_order(user):
             events {
                 edges {
                     node {
-                        name
+                        address
                     }
                 }
             }
@@ -170,27 +172,27 @@ async def test_events_order(user):
     )
 
     assert response.status_code == 200
-    assert response.json()["data"]["events"]["edges"][0]["node"]["name"] == "item-99"
+    events = response.json()["data"]["events"]["edges"]
+    max_address = max(map(lambda itm: itm["node"]["address"], events))
+    assert events[0]["node"]["address"] == max_address
 
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures(
     "user",
     "event_global_id",
-    "event_name",
     "event_longitude",
     "event_latitude",
     "event",
 )
 async def test_retrieve(
-    user, event_global_id, event_name, event_longitude, event_latitude
+    user, event_global_id, event_longitude, event_latitude
 ):
     response = await graphql(
         """
         query getEvent($id: ID!) {
             event(id: $id) {
                 id
-                name
                 longitude
                 latitude
             }
@@ -201,7 +203,6 @@ async def test_retrieve(
     )
 
     assert response.status_code == 200
-    assert response.json()["data"]["event"]["name"] == event_name
     assert response.json()["data"]["event"]["longitude"] == event_longitude
     assert response.json()["data"]["event"]["latitude"] == event_latitude
 
@@ -213,7 +214,6 @@ async def test_retrieve(
     [
         (
             {
-                "name": "New event",
                 "type": "ROBBERY",
                 "address": "some address",
                 "longitude": 1,
@@ -222,7 +222,7 @@ async def test_retrieve(
             {
                 "data": {
                     "createEvent": {
-                        "name": "New event",
+                        "address": "some address",
                         "createdBy": {"username": "mockuser"},
                         "longitude": 1.0,
                         "latitude": 2.0,
@@ -236,7 +236,6 @@ async def test_create(db, user, input, result):
     response = await graphql(
         """
         mutation createEvent(
-            $name: String!,
             $type: EventType!,
             $address: String!,
             $longitude: Float!,
@@ -244,14 +243,13 @@ async def test_create(db, user, input, result):
         ) {
             createEvent (
                 input: {
-                    name: $name,
                     type: $type,
                     address: $address,
                     longitude: $longitude
                     latitude: $latitude
                 }
             ) {
-                name
+                address
                 longitude
                 latitude
                 createdBy {
@@ -267,22 +265,22 @@ async def test_create(db, user, input, result):
     assert response.status_code == 200
     assert response.json() == result
 
-    doc = await db.events.find_one({}, {"_id": 0, "events": 1, "name": 1, "value": 1})
-    assert "New event" == doc["name"]
+    doc = await db.events.find_one({}, {"_id": 0, "events": 1, "address": 1})
+    assert doc["address"] == "some address"
 
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures("db", "user", "event_global_id", "event")
 @pytest.mark.parametrize(
     "input,result",
-    [({"name": "Updated event"}, {"data": {"updateEvent": {"name": "Updated event"}}})],
+    [({"address": "Updated event"}, {"data": {"updateEvent": {"address": "Updated event"}}})],
 )
 async def test_update(db, user, event_global_id, input, result):
     response = await graphql(
         """
-        mutation updateEvent($id: ID!, $name: String) {
-            updateEvent (input: {id: $id, name: $name}) {
-                name
+        mutation updateEvent($id: ID!, $address: String) {
+            updateEvent (input: {id: $id, address: $address}) {
+                address
             }
         }
         """,
@@ -294,18 +292,18 @@ async def test_update(db, user, event_global_id, input, result):
     assert response.status_code == 200
     assert response.json() == result
 
-    doc = await db.events.find_one({}, {"_id": 0, "events": 1, "name": 1, "value": 1})
-    assert "Updated event" == doc["name"]
+    doc = await db.events.find_one({}, {"_id": 0, "events": 1, "address": 1})
+    assert doc["address"] == "Updated event"
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures("db", "user", "event_name", "event_global_id", "event")
-async def test_delete(db, user, event_name, event_global_id):
+@pytest.mark.usefixtures("db", "user", "event_address", "event_global_id", "event")
+async def test_delete(db, user, event_address, event_global_id):
     response = await graphql(
         """
         mutation deleteEvent($id: ID!) {
             deleteEvent (input: {id: $id}) {
-                name
+                address
             }
         }
         """,
@@ -314,7 +312,7 @@ async def test_delete(db, user, event_name, event_global_id):
     )
 
     assert response.status_code == 200
-    assert response.json()["data"]["deleteEvent"]["name"] == event_name
+    assert response.json()["data"]["deleteEvent"]["address"] == event_address
 
-    doc = await db.events.find_one({}, {"_id": 0, "events": 1, "name": 1, "value": 1})
+    doc = await db.events.find_one({}, {"_id": 0, "events": 1, "address": 1})
     assert not doc

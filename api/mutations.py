@@ -19,7 +19,6 @@ def get_event_from_document(doc):
 
 class CreateEventMutation(relay.ClientIDMutation):
     class Input:
-        name = graphene.String(required=True)
         type = graphene.Enum.from_enum(EventType)(required=True)
         description = graphene.String()
 
@@ -35,7 +34,6 @@ class CreateEventMutation(relay.ClientIDMutation):
         credentials = info.context["credentials"]
         doc = {
             "id": uuid.uuid4(),
-            "name": input["name"],
             "type": input["type"],
             "description": input.get("description"),
             "address": input["address"],
@@ -55,7 +53,6 @@ class CreateEventMutation(relay.ClientIDMutation):
 class UpdateEventMutation(relay.ClientIDMutation):
     class Input:
         id = graphene.ID(required=True)
-        name = graphene.String()
         type = graphene.Enum.from_enum(EventType)
         description = graphene.String()
 
