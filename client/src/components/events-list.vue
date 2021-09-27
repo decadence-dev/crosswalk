@@ -71,10 +71,10 @@ export default {
           v-for="event in events"
       >
         <span class="item__name">
-          {{ event.name }}
+          {{ event.address }}
         </span>
         <span class="item__address">
-          {{ event.address }}
+          {{ event.eventType }}
         </span>
         <router-link
             :to="{ name: 'event', params: { id: event.id }}"

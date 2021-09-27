@@ -12,7 +12,7 @@ def get_event_projection():
     return {
         "id": 1,
         "name": 1,
-        "type": 1,
+        "event_type": 1,
         "description": 1,
         "address": 1,
         "created_by": 1,
@@ -23,7 +23,7 @@ def get_event_projection():
     }
 
 
-class EventType(Enum):
+class EventType(graphene.Enum):
     ROBBERY = 1
     FIGHT = 2
     DEATH = 3
@@ -43,7 +43,7 @@ class Event(graphene.ObjectType):
     class Meta:
         interfaces = (relay.Node,)
 
-    type = graphene.Int()
+    event_type = graphene.Field(type=EventType)
     description = graphene.String()
 
     address = graphene.String()
@@ -66,15 +66,9 @@ class EventConnection(relay.Connection):
         node = Event
 
 
-class EventTypeMap(graphene.ObjectType):
-    name = graphene.String()
-    value = graphene.Int()
-
-
 class Query(graphene.ObjectType):
     event = relay.Node.Field(Event)
     events = MotorConnectionField(EventConnection, search=graphene.String())
-    types = graphene.List(EventTypeMap)
 
     @staticmethod
     async def resolve_events(root, info, **kwargs):
@@ -90,7 +84,3 @@ class Query(graphene.ObjectType):
             [("created_date", -1)]
         )
         return cursor, count
-
-    @staticmethod
-    async def resolve_types(root, info, **kwargs):
-        return EventType

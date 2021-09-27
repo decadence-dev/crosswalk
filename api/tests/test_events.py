@@ -31,7 +31,7 @@ async def event_latitude():
 
 @pytest.fixture
 async def event_address():
-    return '!@someTest_address'
+    return "!@someTest_address"
 
 
 @pytest.fixture
@@ -41,12 +41,20 @@ async def event_global_id(event_id):
 
 @pytest.fixture
 @pytest.mark.usefixtures(
-    "db", "faker", "event_id", "event_address", "event_longitude", "event_latitude", "user"
+    "db",
+    "faker",
+    "event_id",
+    "event_address",
+    "event_longitude",
+    "event_latitude",
+    "user",
 )
-async def event(db, faker, event_id, event_address, event_longitude, event_latitude, user):
+async def event(
+    db, faker, event_id, event_address, event_longitude, event_latitude, user
+):
     doc = {
         "id": event_id,
-        "type": random.randrange(1, 8),
+        "event_type": random.randrange(1, 8),
         "description": faker.text(),
         "address": event_address,
         "location": {"type": "Point", "coordinates": [event_longitude, event_latitude]},
@@ -66,9 +74,9 @@ async def events(db, faker, user):
         for idx in range(0, 100):
             yield {
                 "id": uuid.uuid4(),
-                "type": random.randrange(1, 8),
+                "event_type": random.randrange(1, 8),
                 "description": faker.text(),
-                "address": f'address-{idx}',
+                "address": f"address-{idx}",
                 "location": {"type": "Point", "coordinates": [0, 0]},
                 "created_by": user,
                 "created_date": datetime.now() + timedelta(seconds=1 + idx),
@@ -83,13 +91,13 @@ async def events(db, faker, user):
 
 
 @pytest.fixture
-@pytest.mark.usefixtures("db", "faker", "user", 'event_address')
+@pytest.mark.usefixtures("db", "faker", "user", "event_address")
 async def events_with_sprcific_address(db, faker, user, event_address):
     def gen_events():
         for idx in range(1, 21):
             yield {
                 "id": uuid.uuid4(),
-                "type": random.randrange(1, 8),
+                "event_type": random.randrange(1, 8),
                 "description": faker.text(),
                 "address": event_address,
                 "location": {"type": "Point", "coordinates": [0, 0]},
@@ -130,7 +138,7 @@ async def test_list(user):
 @pytest.mark.asyncio
 @pytest.mark.usefixtures("user", "events", "events_with_sprcific_address")
 @pytest.mark.parametrize(
-    "variables,expected_count", [({}, 120), ({"search": '!@someTest_address'}, 20)]
+    "variables,expected_count", [({}, 120), ({"search": "!@someTest_address"}, 20)]
 )
 async def test_list_search(user, variables, expected_count):
     response = await graphql(
@@ -185,9 +193,7 @@ async def test_events_order(user):
     "event_latitude",
     "event",
 )
-async def test_retrieve(
-    user, event_global_id, event_longitude, event_latitude
-):
+async def test_retrieve(user, event_global_id, event_longitude, event_latitude):
     response = await graphql(
         """
         query getEvent($id: ID!) {
@@ -214,7 +220,7 @@ async def test_retrieve(
     [
         (
             {
-                "type": "ROBBERY",
+                "eventType": "ROBBERY",
                 "address": "some address",
                 "longitude": 1,
                 "latitude": 2,
@@ -222,6 +228,7 @@ async def test_retrieve(
             {
                 "data": {
                     "createEvent": {
+                        "eventType": "ROBBERY",
                         "address": "some address",
                         "createdBy": {"username": "mockuser"},
                         "longitude": 1.0,
@@ -236,20 +243,21 @@ async def test_create(db, user, input, result):
     response = await graphql(
         """
         mutation createEvent(
-            $type: EventType!,
+            $eventType: EventType!,
             $address: String!,
             $longitude: Float!,
             $latitude: Float!
         ) {
             createEvent (
                 input: {
-                    type: $type,
+                    eventType: $eventType,
                     address: $address,
                     longitude: $longitude
                     latitude: $latitude
                 }
             ) {
                 address
+                eventType
                 longitude
                 latitude
                 createdBy {
@@ -273,7 +281,12 @@ async def test_create(db, user, input, result):
 @pytest.mark.usefixtures("db", "user", "event_global_id", "event")
 @pytest.mark.parametrize(
     "input,result",
-    [({"address": "Updated event"}, {"data": {"updateEvent": {"address": "Updated event"}}})],
+    [
+        (
+            {"address": "Updated event"},
+            {"data": {"updateEvent": {"address": "Updated event"}}},
+        )
+    ],
 )
 async def test_update(db, user, event_global_id, input, result):
     response = await graphql(

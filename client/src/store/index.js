@@ -3,6 +3,17 @@ import {
 } from 'apollo-boost';
 import gql from 'graphql-tag';
 
+const EVENT_TYPE_MAP = {
+  ROBBERY: 'Robbery',
+  FIGHT: 'Fight',
+  DEATH: 'Death',
+  GUN: 'Gun',
+  INADEQUATE: 'Inadequate',
+  ACCEDENT: 'Accedent',
+  FIRE: 'Fire',
+  POLICE: 'Police',
+}
+
 const client = new ApolloClient({
   link: new ApolloLink((operation, forward) => {
     const token = localStorage.getItem('token');
@@ -22,7 +33,7 @@ const EVENT_QUERY = gql`
   query getEvent($id: ID!) {
     event(id: $id) {
       id
-      name
+      eventType
       address
       description
       createdDate
@@ -43,8 +54,8 @@ const EVENTS_QUERY = gql`
       edges{
         node {
           id
-          name
           address
+          eventType
         }
       }
     }
@@ -60,15 +71,26 @@ export default {
   mutations: {
     /* eslint-disable */
     setEvent(state, data) {
-      state.event = data.event;
+      state.event = {...data.event, eventType: EVENT_TYPE_MAP[data.event.eventType]};
     },
     setEvents(state, data) {
-      state.events = data.events.edges.map((edge) => (edge.node));
+      state.events = data.events.edges.map(
+        (edge) => ({
+          ...edge.node, eventType: EVENT_TYPE_MAP[edge.node.eventType]
+        })
+      );
       state.hasNextPage = data.events.pageInfo.hasNextPage;
       state.endCursor = data.events.pageInfo.endCursor;
     },
     updateEvents(state, data) {
-      state.events = [...state.events, ...data.events.edges.map((edge) => (edge.node))];
+      state.events = [
+        ...state.events,
+        data.events.edges.map(
+          (edge) => ({
+            ...edge.node, eventType: EVENT_TYPE_MAP[edge.node.eventType]
+          })
+        )
+      ];
       state.hasNextPage = data.events.pageInfo.hasNextPage;
       state.endCursor = data.events.pageInfo.endCursor;
     },

@@ -50,7 +50,7 @@ export default {
       <CloseIcon></CloseIcon>
     </div>
     <div class="info">
-      <span class="info__name">{{ event.name }}</span>
+      <span class="info__type">{{ event.eventType }}</span>
       <span class="info__address">{{ event.address }}</span>
       <div class="publication">
         <span class="publication__author">{{ publicationAuthor }}</span>
@@ -102,9 +102,9 @@ export default {
     flex-flow: column;
     padding: 24px 16px 0;
 
-    &__name {
-      font: $main;
-      color: $yellow;
+    &__type {
+      font: $help;
+      color: $grey;
     }
 
     &__address {
