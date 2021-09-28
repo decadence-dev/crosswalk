@@ -2,7 +2,7 @@ import os
 from datetime import datetime, timedelta
 
 import graphene
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Cookie, Depends, FastAPI, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from graphql.execution.executors.asyncio import AsyncioExecutor
 from jose import JWTError, jwt
@@ -58,9 +58,11 @@ async def database_middleware(next, root, info, **args):
     return next(root, info, **args)
 
 
-async def credentials_middleware(next, root, info, **args):
+async def user_info_middleware(next, root, info, **args):
     if "credentials" not in info.context:
         info.context["credentials"] = info.context["request"].credentials
+    if "timezone" not in info.context:
+        info.context["timezone"] = info.context["request"].timezone
     return next(root, info, **args)
 
 
@@ -86,7 +88,7 @@ app.add_middleware(
 schema = MiddlewareSchema(
     query=Query,
     mutation=Mutation,
-    middleware=[database_middleware, credentials_middleware],
+    middleware=[database_middleware, user_info_middleware],
 )
 
 
@@ -96,10 +98,12 @@ graphql_app = GraphQLApp(schema=schema, executor_class=AsyncioExecutor)
 @app.post("/")
 async def main(
     request: Request,
+    timezone: str = Cookie("UTC"),
     credentials: dict = Depends(get_current_user_creadentials),
     db: AsyncIOMotorDatabase = Depends(get_db),
 ):
     request.db = db
+    request.timezone = timezone
     request.credentials = credentials
     return await graphql_app.handle_graphql(request)
 

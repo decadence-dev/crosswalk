@@ -16,7 +16,7 @@ const routes = [
       { name: 'event', path: '/:id', component: Event },
     ],
   },
-]
+];
 
 export default {
   name: 'App',

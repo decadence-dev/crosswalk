@@ -1,8 +1,8 @@
 import re
 import uuid
-from enum import Enum
 
 import graphene
+import pytz
 from graphene import relay
 
 from pagination import MotorConnectionField
@@ -59,6 +59,24 @@ class Event(graphene.ObjectType):
         collection = info.context["db"].events
         doc = await collection.find_one({"id": uuid.UUID(id)}, get_event_projection())
         return doc
+
+    @staticmethod
+    async def resolve_created_date(root, info, **kwargs):
+        timezone = pytz.timezone(info.context["timezone"])
+        return (
+            root["created_date"].astimezone(timezone)
+            if "created_date" in root
+            else None
+        )
+
+    @staticmethod
+    async def resolve_changed_date(root, info, **kwargs):
+        timezone = pytz.timezone(info.context["timezone"])
+        return (
+            root["changed_date"].astimezone(timezone)
+            if "changed_date" in root
+            else None
+        )
 
 
 class EventConnection(relay.Connection):

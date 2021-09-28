@@ -65,6 +65,7 @@ export default {
   mounted() {
     this.login();
     this.$store.dispatch('getEvents', { first: 10 });
+    document.cookie = `timezone=${Intl.DateTimeFormat().resolvedOptions().timeZone}`;
   },
 };
 </script>

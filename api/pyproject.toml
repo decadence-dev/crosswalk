@@ -12,6 +12,7 @@ uvicorn = "^0.13.4"
 graphene = "^2.1.9"
 python-jose = "^3.3.0"
 asgi-lifespan = "^1.0.1"
+pytz = "^2021.1"
 
 [tool.poetry.dev-dependencies]
 ipdb = "0.13.9"

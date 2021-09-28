@@ -12,7 +12,7 @@ const EVENT_TYPE_MAP = {
   ACCEDENT: 'Accedent',
   FIRE: 'Fire',
   POLICE: 'Police',
-}
+};
 
 const client = new ApolloClient({
   link: new ApolloLink((operation, forward) => {
