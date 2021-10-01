@@ -8,45 +8,57 @@ from graphql_relay import from_global_id
 from queries import Event, EventType
 
 
+def get_event_from_document(doc):
+    longitude, latitude = doc["location"]["coordinates"]
+    return Event(
+        **{field: value for field, value in doc.items() if field != "location"},
+        longitude=longitude,
+        latitude=latitude,
+    )
+
+
 class CreateEventMutation(relay.ClientIDMutation):
     class Input:
-        name = graphene.String(required=True)
-        type = graphene.Enum.from_enum(EventType)(required=True)
+        event_type = graphene.Field(type=EventType, required=True)
         description = graphene.String()
 
         address = graphene.String(required=True)
-        location = graphene.List(graphene.NonNull(graphene.Float))
+        longitude = graphene.Float(required=True)
+        latitude = graphene.Float(required=True)
 
     Output = Event
 
     @staticmethod
     async def mutate_and_get_payload(root, info, **input):
         current_date = datetime.now()
+        credentials = info.context["credentials"]
         doc = {
             "id": uuid.uuid4(),
-            "name": input["name"],
-            "type": input["type"],
+            "event_type": input["event_type"],
             "description": input.get("description"),
             "address": input["address"],
-            "location": {"type": "Point", "coordinates": input["location"]},
-            "created_by": info.context["credentials"],
+            "location": {
+                "type": "Point",
+                "coordinates": [input["longitude"], input["latitude"]],
+            },
+            "created_by": credentials,
             "created_date": current_date,
             "changed_date": current_date,
         }
         collection = info.context["db"].events
         await collection.insert_one(doc.copy())
-        return Event(**doc)
+        return get_event_from_document(doc)
 
 
 class UpdateEventMutation(relay.ClientIDMutation):
     class Input:
         id = graphene.ID(required=True)
-        name = graphene.String()
-        type = graphene.Enum.from_enum(EventType)
+        event_type = graphene.Field(type=EventType)
         description = graphene.String()
 
         address = graphene.String()
-        location = graphene.List(graphene.Float)
+        longitude = graphene.Float()
+        latitude = graphene.Float()
 
     Output = Event
 
@@ -64,7 +76,7 @@ class UpdateEventMutation(relay.ClientIDMutation):
                 }
             )
             await collection.update_one({"id": uuid.UUID(_id)}, {"$set": doc.copy()})
-            return Event(**doc)
+            return get_event_from_document(doc)
 
         raise Exception(f"Event with id {_id} is not exist.")
 
@@ -82,7 +94,7 @@ class DeleteEventMutation(relay.ClientIDMutation):
 
         if doc := await collection.find_one({"id": uuid.UUID(_id)}, {"_id": 0}):
             await collection.delete_one({"id": uuid.UUID(_id)})
-            return Event(**doc)
+            return get_event_from_document(doc)
 
         raise Exception(f"Event with id {_id} is not exist.")
 

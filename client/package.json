@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "parcel src/index.html --host 0.0.0.0 --hmr-port 8080"
+    "start": "parcel src/index.html --host 0.0.0.0 --hmr-port 8080",
+    "lint:script": "npx eslint --fix ./src/**/*.vue",
+    "lint:style": "npx stylelint --fix './src/**/*.vue' --custom-syntax postcss-html",
+    "lint": "npm run lint:script && npm run lint:style"
   },
   "author": "",
   "license": "ISC",
@@ -21,7 +24,14 @@
     "@babel/core": "^7.15.5",
     "@babel/plugin-transform-runtime": "^7.15.0",
     "@vue/component-compiler-utils": "^3.2.2",
+    "eslint": "^7.32.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-plugin-import": "^2.24.2",
+    "eslint-plugin-vue": "^7.18.0",
     "sass": "^1.39.0",
+    "stylelint": "^13.13.1",
+    "stylelint-config-standard": "^22.0.0",
+    "stylelint-processor-html": "^1.0.0",
     "vue-template-compiler": "^2.6.14"
   }
 }

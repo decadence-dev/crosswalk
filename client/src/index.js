@@ -1,13 +1,13 @@
-import Vue from 'vue'
-import Vuex from 'vuex'
+import Vue from 'vue';
+import Vuex from 'vuex';
 
-import App from './app'
-import store from './store'
+import App from './app.vue';
+import store from './store';
 
-Vue.use(Vuex)
+Vue.use(Vuex);
 
-new Vue({
+new Vue({ // eslint-disable-line no-new
   el: '#app',
   store: new Vuex.Store(store),
-  render: h => h(App)
-})
+  render: (h) => h(App),
+});

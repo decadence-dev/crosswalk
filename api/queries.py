@@ -1,14 +1,29 @@
 import re
 import uuid
-from enum import Enum
 
 import graphene
+import pytz
 from graphene import relay
 
 from pagination import MotorConnectionField
 
 
-class EventType(Enum):
+def get_event_projection():
+    return {
+        "id": 1,
+        "name": 1,
+        "event_type": 1,
+        "description": 1,
+        "address": 1,
+        "created_by": 1,
+        "created_date": 1,
+        "changed_date": 1,
+        "longitude": {"$arrayElemAt": ["$location.coordinates", 0]},
+        "latitude": {"$arrayElemAt": ["$location.coordinates", -1]},
+    }
+
+
+class EventType(graphene.Enum):
     ROBBERY = 1
     FIGHT = 2
     DEATH = 3
@@ -21,19 +36,19 @@ class EventType(Enum):
 
 class User(graphene.ObjectType):
     id = graphene.UUID(required=True)
-    name = graphene.String(required=True)
+    username = graphene.String(required=True)
 
 
 class Event(graphene.ObjectType):
     class Meta:
         interfaces = (relay.Node,)
 
-    name = graphene.String()
-    type = graphene.Int()
+    event_type = graphene.Field(type=EventType)
     description = graphene.String()
 
     address = graphene.String()
-    location = graphene.List(graphene.Float)
+    longitude = graphene.Float()
+    latitude = graphene.Float()
 
     created_by = graphene.Field(User)
     created_date = graphene.DateTime()
@@ -42,8 +57,26 @@ class Event(graphene.ObjectType):
     @staticmethod
     async def get_node(info, id):
         collection = info.context["db"].events
-        doc = await collection.find_one({"id": uuid.UUID(id)}, {"_id": 0})
+        doc = await collection.find_one({"id": uuid.UUID(id)}, get_event_projection())
         return doc
+
+    @staticmethod
+    async def resolve_created_date(root, info, **kwargs):
+        timezone = pytz.timezone(info.context["timezone"])
+        return (
+            root["created_date"].astimezone(timezone)
+            if "created_date" in root
+            else None
+        )
+
+    @staticmethod
+    async def resolve_changed_date(root, info, **kwargs):
+        timezone = pytz.timezone(info.context["timezone"])
+        return (
+            root["changed_date"].astimezone(timezone)
+            if "changed_date" in root
+            else None
+        )
 
 
 class EventConnection(relay.Connection):
@@ -51,15 +84,9 @@ class EventConnection(relay.Connection):
         node = Event
 
 
-class EventTypeMap(graphene.ObjectType):
-    name = graphene.String()
-    value = graphene.Int()
-
-
 class Query(graphene.ObjectType):
     event = relay.Node.Field(Event)
     events = MotorConnectionField(EventConnection, search=graphene.String())
-    types = graphene.List(EventTypeMap)
 
     @staticmethod
     async def resolve_events(root, info, **kwargs):
@@ -67,13 +94,11 @@ class Query(graphene.ObjectType):
         if value := kwargs.get("search"):
             # TODO replace filter with mongo text index
             pattern = re.compile(f".*{value}.*", re.IGNORECASE)
-            filter.update({"$or": [{"name": pattern}, {"address": pattern}]})
+            filter.update({"address": pattern})
 
         collection = info.context["db"].events
         count = await collection.count_documents(filter)
-        cursor = collection.find(filter, {"_id": 0})
+        cursor = collection.find(filter, get_event_projection()).sort(
+            [("created_date", -1)]
+        )
         return cursor, count
-
-    @staticmethod
-    async def resolve_types(root, info, **kwargs):
-        return EventType
