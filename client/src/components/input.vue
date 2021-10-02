@@ -19,7 +19,6 @@ export default {
 
 <template lang="html">
   <input
-      class="input"
       type="text"
       v-on="$listeners"
       @input="$emit('update', $event.target.value)"
@@ -32,7 +31,7 @@ export default {
 <style lang="scss">
 @import "../styles/variables";
 
-.input {
+input {
   padding: 8px 12px;
   border-radius: 8px;
   border: 1px solid $yellow;

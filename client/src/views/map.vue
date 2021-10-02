@@ -1,16 +1,12 @@
 <script>
 import { mapState } from 'vuex';
-import MenuIcon from '../icons/menu.vue';
-import NotificationsIcon from '../icons/notifications.vue';
-import CloseIcon from '../icons/close.vue';
-import DashIcon from '../icons/dash.vue';
 import Navbar from '../components/navbar.vue';
 import EventsList from '../components/events-list.vue';
 
 export default {
   name: 'Map',
   components: {
-    EventsList, Navbar, MenuIcon, CloseIcon, NotificationsIcon, DashIcon,
+    EventsList, Navbar,
   },
   data: () => ({
     isMenuOpened: false,
@@ -77,10 +73,11 @@ export default {
           class="menu-btn"
           v-on:click="isMenuOpened = !isMenuOpened"
       >
-        <MenuIcon v-if="!isMenuOpened"></MenuIcon>
-        <CloseIcon v-if="isMenuOpened"></CloseIcon>
+        <img src="" alt="">
+        <img src="../icons/menu.svg" alt="">
+        <img src="../icons/close.svg" alt="">
       </div>
-      <NotificationsIcon></NotificationsIcon>
+      <img src="../icons/notifications.svg" alt="">
     </div>
     <aside
         class="menu"
@@ -88,7 +85,6 @@ export default {
     >
       <Navbar></Navbar>
     </aside>
-    <router-view></router-view>
     <aside
         class="events-sidebar"
         v-bind:class="{ 'events-sidebar_opened': isEventsListOpened }"
@@ -97,7 +93,7 @@ export default {
           class="events-sidebar__header"
           v-on:click="isEventsListOpened = !isEventsListOpened"
       >
-        <DashIcon></DashIcon>
+        <img src="../icons/dash.svg" alt="">
       </div>
       <EventsList></EventsList>
     </aside>

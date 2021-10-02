@@ -1,11 +1,8 @@
 <script>
 import { mapState } from 'vuex';
-import CloseIcon from '../icons/close.vue';
-import OptionsIcon from '../icons/options.vue';
 
 export default {
   name: 'Event',
-  components: { CloseIcon, OptionsIcon },
   computed: {
     ...mapState({
       event: (state) => state.event,
@@ -47,7 +44,7 @@ export default {
       >
         <a class="close-link" :href="href" @click="navigate"></a>
       </router-link>
-      <CloseIcon></CloseIcon>
+      <img src="../icons/close.svg" alt="">
     </div>
     <div class="info">
       <span class="info__type">{{ event.eventType }}</span>
@@ -58,9 +55,7 @@ export default {
       </div>
       <span class="info__description">{{ event.description }}</span>
     </div>
-    <div class="options">
-      <OptionsIcon></OptionsIcon>
-    </div>
+    <img class="options" src="../icons/options.svg" alt="">
   </aside>
 </template>
 
