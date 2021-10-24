@@ -20,6 +20,7 @@ export default {
 <template lang="html">
   <input
       type="text"
+      class="input"
       v-on="$listeners"
       @input="$emit('update', $event.target.value)"
       :name="name"
@@ -31,7 +32,7 @@ export default {
 <style lang="scss">
 @import "../styles/variables";
 
-input {
+.input {
   padding: 8px 12px;
   border-radius: 8px;
   border: 1px solid $yellow;
@@ -41,6 +42,7 @@ input {
 
   &:focus {
     outline: none;
+    box-shadow: 0 0 0 2px $black, 0 0 0 4px $grey;
   }
 
   &::placeholder {

@@ -1,29 +1,13 @@
 <script>
 import Vue from 'vue';
 import VueRouter from 'vue-router';
-
-import Map from './views/map.vue';
-import Event from './views/event.vue';
+import router from './router';
 
 Vue.use(VueRouter);
 
-const routes = [
-  {
-    name: 'map',
-    path: '/',
-    component: Map,
-    children: [
-      { name: 'event', path: '/:id', component: Event },
-    ],
-  },
-];
-
 export default {
   name: 'App',
-  router: new VueRouter({
-    mode: 'history',
-    routes,
-  }),
+  router,
 };
 </script>
 

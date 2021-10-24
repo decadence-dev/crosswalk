@@ -3,6 +3,17 @@ import { mapState } from 'vuex';
 import Input from './input.vue';
 import Button from './button.vue';
 
+const EVENT_TYPE_MAP = {
+  ROBBERY: 'Robbery',
+  FIGHT: 'Fight',
+  DEATH: 'Death',
+  GUN: 'Gun',
+  INADEQUATE: 'Inadequate',
+  ACCEDENT: 'Accedent',
+  FIRE: 'Fire',
+  POLICE: 'Police',
+};
+
 export default {
   name: 'EventsList',
   components: {
@@ -10,12 +21,17 @@ export default {
   },
   computed: {
     ...mapState({
-      events: (state) => state.events,
+      events: (state) => state.events.map(
+        (event) => ({
+          ...event, eventType: EVENT_TYPE_MAP[event.eventType],
+        }),
+      ),
     }),
-    hasEvents: {
-      get() {
-        return this.$store.state.events.length !== 0;
-      },
+    hasEvents() {
+      return this.$store.state.events.length !== 0;
+    },
+    hasNext() {
+      return this.$store.state.hasNextPage;
     },
     query: {
       get() {
@@ -77,7 +93,7 @@ export default {
           {{ event.eventType }}
         </span>
         <router-link
-            :to="{ name: 'event', params: { id: event.id }}"
+            :to="{ name: 'detail', params: { id: event.id }}"
             v-slot="{href, navigate}"
             custom
         >
@@ -85,10 +101,7 @@ export default {
         </router-link>
       </div>
       <div class="items__fetch-more">
-        <Button
-            v-show="this.$store.state.hasNextPage"
-            @click.native="fetchMore"
-        >
+        <Button v-show="hasNext" @click.native="fetchMore">
           Fetch more
         </Button>
       </div>

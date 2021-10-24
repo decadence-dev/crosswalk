@@ -21,6 +21,7 @@ export default {
   background-color: $yellow;
   font: $help;
   color: $black;
+  border: none;
 
   &:focus {
     outline: none;

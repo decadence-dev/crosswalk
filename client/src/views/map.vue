@@ -33,6 +33,12 @@ export default {
         this.query = value;
       },
     },
+    errors() {
+      return this.$store.state.globalErrors;
+    },
+    hasErrors() {
+      return this.$store.state.globalErrors != null;
+    },
   },
   methods: {
     login() {
@@ -43,23 +49,8 @@ export default {
           });
         });
     },
-    searchSubmit(e) {
-      e.preventDefault();
-      this.$store.dispatch(
-        'getEvents',
-        { ...this.query, first: 10 },
-      );
-    },
-    fetchMore(e) {
-      e.preventDefault();
-      this.$store.dispatch(
-        'fetchMoreEvents',
-        {
-          ...this.query,
-          after: this.$store.state.endCursor,
-          first: 10,
-        },
-      );
+    resolveError(errorMessage) {
+      this.$store.dispatch('resolveErrors', [errorMessage]);
     },
   },
   mounted() {
@@ -72,6 +63,22 @@ export default {
 
 <template lang="html">
   <div class="map">
+    <div class="errors">
+      <span
+          class="error"
+          v-show="hasErrors"
+          v-for="(error, idx) in errors"
+          :key="idx"
+          @click="resolveError(error)"
+      >{{ error }}</span>
+    </div>
+    <router-link
+        :to="{ name: 'create' }"
+        v-slot="{href, navigate}"
+        custom
+    >
+      <a class="creation__link" :href="href" @click="navigate"></a>
+    </router-link>
     <div class="header">
       <div
           class="menu-btn"
@@ -88,7 +95,6 @@ export default {
     >
       <Navbar></Navbar>
     </aside>
-    <router-view></router-view>
     <aside
         class="events-sidebar"
         v-bind:class="{ 'events-sidebar_opened': isEventsListOpened }"
@@ -115,6 +121,33 @@ export default {
   flex: 1 0 auto;
   max-width: 100%;
   background-color: $black;
+
+  .creation__link {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+  }
+}
+
+.errors {
+  z-index: 10;
+  position: absolute;
+  align-self: center;
+  display: flex;
+  right: 0;
+  left: 0;
+  padding: 16px 0 0;
+  justify-content: center;
+
+  .error {
+    padding: 8px;
+    color: $white;
+    background-color: $red;
+    max-width: 224px;
+    font: $help;
+  }
 }
 
 .header {

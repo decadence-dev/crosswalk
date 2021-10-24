@@ -2,17 +2,7 @@ import {
   ApolloClient, ApolloLink, HttpLink, InMemoryCache,
 } from 'apollo-boost';
 import gql from 'graphql-tag';
-
-const EVENT_TYPE_MAP = {
-  ROBBERY: 'Robbery',
-  FIGHT: 'Fight',
-  DEATH: 'Death',
-  GUN: 'Gun',
-  INADEQUATE: 'Inadequate',
-  ACCEDENT: 'Accedent',
-  FIRE: 'Fire',
-  POLICE: 'Police',
-};
+import router from './router';
 
 const client = new ApolloClient({
   link: new ApolloLink((operation, forward) => {
@@ -62,45 +52,75 @@ const EVENTS_QUERY = gql`
   }
 `;
 
+const EVENT_CREATE_MUTATION = gql`
+  mutation createEvent(
+    $eventType: EventType!, 
+    $address: String!, 
+    $longitude: Float!, 
+    $latitude: Float!,
+    $description: String
+  ) {
+    createEvent (
+      input: { 
+          eventType: $eventType, 
+          address: $address, 
+          longitude: $longitude, 
+          latitude: $latitude,
+          description: $description
+      }
+    ) {
+      id
+      eventType
+      address
+      description
+      createdDate
+      createdBy {
+        username
+      }
+    }
+  }
+`;
+
 export default {
   state: {
     event: {},
+    globalErrors: {},
     events: [],
     pageInfo: {},
   },
   mutations: {
     /* eslint-disable */
-    setEvent(state, data) {
-      state.event = {...data.event, eventType: EVENT_TYPE_MAP[data.event.eventType]};
+    setEvent(state, event) {
+      state.event = event;
+    },
+    updateErrors(state, errors) {
+      state.errors = [...state.errors, ...errors]
+    },
+    resolveErrors(state, errors) {
+      state.errors = state.errors.filter((error) => !errors.includes(errorMessage))
+    },
+    insertEvent(state, event) {
+      state.events = [...[event], ...state.events]
     },
     setEvents(state, data) {
-      state.events = data.events.edges.map(
-        (edge) => ({
-          ...edge.node, eventType: EVENT_TYPE_MAP[edge.node.eventType]
-        })
-      );
+      state.events = data.events.edges.map((edge) => (edge.node));
       state.hasNextPage = data.events.pageInfo.hasNextPage;
       state.endCursor = data.events.pageInfo.endCursor;
     },
     updateEvents(state, data) {
-      state.events = [
-        ...state.events,
-        data.events.edges.map(
-          (edge) => ({
-            ...edge.node, eventType: EVENT_TYPE_MAP[edge.node.eventType]
-          })
-        )
-      ];
+      state.events = [...state.events, ...data.events.edges.map((edge) => (edge.node))];
       state.hasNextPage = data.events.pageInfo.hasNextPage;
       state.endCursor = data.events.pageInfo.endCursor;
     },
     /* eslint-enable */
-
   },
   actions: {
     async getEvent({ commit }, variables) {
       const response = await client.query({ query: EVENT_QUERY, variables });
-      commit('setEvent', response.data);
+      commit('setEvent', response.data.event);
+    },
+    async resetEvent({ commit }) {
+      commit('setEvent', {});
     },
     async getEvents({ commit }, variables = {}) {
       const response = await client.query({ query: EVENTS_QUERY, variables });
@@ -109,6 +129,25 @@ export default {
     async fetchMoreEvents({ commit }, variables = {}) {
       const response = await client.query({ query: EVENTS_QUERY, variables });
       commit('updateEvents', response.data);
+    },
+    async createEvent({ commit, state }) {
+      await client.mutate({
+        mutation: EVENT_CREATE_MUTATION,
+        variables: { ...state.event, longitude: 0.0, latitude: 0.0 },
+      }).then((response) => {
+        const event = response.data.createEvent;
+        commit('insertEvent', event);
+        router.push({ name: 'detail', params: { id: event.id } });
+      }).catch((errors) => {
+        const errs = errors.networkError.result.errors.map((error) => (error.message));
+        commit('updateErrors', errs);
+      });
+    },
+    async updateErrors({ commit }, errors) {
+      commit('updateErrors', errors);
+    },
+    async resolveErrors({ commit }, errors) {
+      commit('resolveErrors', errors);
     },
   },
 };

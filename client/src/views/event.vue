@@ -3,12 +3,23 @@ import { mapState } from 'vuex';
 import CloseIcon from '../icons/close.vue';
 import OptionsIcon from '../icons/options.vue';
 
+const EVENT_TYPE_MAP = {
+  ROBBERY: 'Robbery',
+  FIGHT: 'Fight',
+  DEATH: 'Death',
+  GUN: 'Gun',
+  INADEQUATE: 'Inadequate',
+  ACCEDENT: 'Accedent',
+  FIRE: 'Fire',
+  POLICE: 'Police',
+};
+
 export default {
   name: 'Event',
   components: { CloseIcon, OptionsIcon },
   computed: {
     ...mapState({
-      event: (state) => state.event,
+      event: (state) => ({ ...state.event, eventType: EVENT_TYPE_MAP[state.event.eventType] }),
     }),
     publicationDate() {
       const { createdDate } = this.$store.state.event;
@@ -58,9 +69,7 @@ export default {
       </div>
       <span class="info__description">{{ event.description }}</span>
     </div>
-    <div class="options">
-      <OptionsIcon></OptionsIcon>
-    </div>
+    <OptionsIcon class="options"></OptionsIcon>
   </aside>
 </template>
 

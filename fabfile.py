@@ -11,3 +11,9 @@ def runapi():
 
 def testapi(path='.'):
     local(f'docker-compose run -e DATABASE_NAME=test --rm --use-aliases api poetry run pytest -s {path}')
+
+
+def lint(path='.'):
+    local(f'poetry run isort {path}')
+    local(f'poetry run black {path}')
+    local(f'poetry run flake8 {path}')
