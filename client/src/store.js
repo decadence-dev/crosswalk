@@ -84,7 +84,7 @@ const EVENT_CREATE_MUTATION = gql`
 export default {
   state: {
     event: {},
-    globalErrors: {},
+    globalErrors: [],
     events: [],
     pageInfo: {},
   },
@@ -94,10 +94,10 @@ export default {
       state.event = event;
     },
     updateErrors(state, errors) {
-      state.errors = [...state.errors, ...errors]
+      state.globalErrors = [...state.globalErrors, ...errors]
     },
     resolveErrors(state, errors) {
-      state.errors = state.errors.filter((error) => !errors.includes(errorMessage))
+      state.globalErrors = state.globalErrors.filter((error) => !errors.includes(error))
     },
     insertEvent(state, event) {
       state.events = [...[event], ...state.events]

@@ -136,17 +136,23 @@ export default {
   position: absolute;
   align-self: center;
   display: flex;
+  flex-flow: column;
   right: 0;
   left: 0;
   padding: 16px 0 0;
-  justify-content: center;
+  align-items: center;
 
   .error {
     padding: 8px;
+    margin: 8px 0 0;
     color: $white;
     background-color: $red;
     max-width: 224px;
     font: $help;
+
+    &:first-child {
+      margin: 0;
+    }
   }
 }
 
