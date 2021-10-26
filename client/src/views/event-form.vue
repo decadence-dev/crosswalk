@@ -43,7 +43,7 @@ export default {
       if (this.$store.state.event[name] == null || this.$store.state.event[name].trim() === '') {
         this.errors = [...this.errors, ...[name]];
       } else {
-        this.errors = this.errors.filter((error) => error.name);
+        this.errors = this.errors.filter((error) => error.name !== name);
       }
     },
   },
@@ -68,7 +68,7 @@ export default {
       </router-link>
       <CloseIcon></CloseIcon>
     </div>
-    <form class="event-form">
+    <form @submit="submitEvent" class="event-form">
       <div class="field">
         <label class="field__label field__label_required" for="address">
           Address

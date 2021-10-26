@@ -2,6 +2,7 @@ import {
   ApolloClient, ApolloLink, HttpLink, InMemoryCache,
 } from 'apollo-boost';
 import gql from 'graphql-tag';
+import { v4 as uuid4 } from 'uuid';
 import router from './router';
 
 const client = new ApolloClient({
@@ -93,11 +94,12 @@ export default {
     setEvent(state, event) {
       state.event = event;
     },
-    updateErrors(state, errors) {
-      state.globalErrors = [...state.globalErrors, ...errors]
+    updateErrors(state, messages) {
+      const errs = messages.map((error) => ({key: uuid4(), message: error}))
+      state.globalErrors = [...state.globalErrors, ...errs]
     },
-    resolveErrors(state, errors) {
-      state.globalErrors = state.globalErrors.filter((error) => !errors.includes(error))
+    resolveErrors(state, keys) {
+      state.globalErrors = state.globalErrors.filter((error) => !keys.includes(error.key))
     },
     insertEvent(state, event) {
       state.events = [...[event], ...state.events]

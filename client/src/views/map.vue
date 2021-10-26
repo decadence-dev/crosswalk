@@ -49,8 +49,8 @@ export default {
           });
         });
     },
-    resolveError(errorMessage) {
-      this.$store.dispatch('resolveErrors', [errorMessage]);
+    resolveError(errorkey) {
+      this.$store.dispatch('resolveErrors', [errorkey]);
     },
   },
   mounted() {
@@ -63,14 +63,13 @@ export default {
 
 <template lang="html">
   <div class="map">
-    <div class="errors">
+    <div v-show="hasErrors" class="errors">
       <span
           class="error"
-          v-show="hasErrors"
-          v-for="(error, idx) in errors"
-          :key="idx"
-          @click="resolveError(error)"
-      >{{ error }}</span>
+          v-for="error in errors"
+          :key="error.key"
+          @click="resolveError(error.key)"
+      >{{ error.message }}</span>
     </div>
     <router-link
         :to="{ name: 'create' }"
@@ -143,6 +142,7 @@ export default {
   align-items: center;
 
   .error {
+    display: none;
     padding: 8px;
     margin: 8px 0 0;
     color: $white;
@@ -150,8 +150,8 @@ export default {
     max-width: 224px;
     font: $help;
 
-    &:first-child {
-      margin: 0;
+    &:last-child {
+      display: inline;
     }
   }
 }
