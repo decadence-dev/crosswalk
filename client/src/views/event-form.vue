@@ -43,7 +43,7 @@ export default {
       if (this.$store.state.event[name] == null || this.$store.state.event[name].trim() === '') {
         this.errors = [...this.errors, ...[name]];
       } else {
-        this.errors = this.errors.filter((error) => error.name !== name);
+        this.errors = this.errors.filter((error) => error !== name);
       }
     },
   },
