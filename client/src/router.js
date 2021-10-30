@@ -12,6 +12,7 @@ export default new VueRouter({
       component: Map,
       children: [
         { name: 'create', path: '/create', component: EventForm },
+        { name: 'update', path: '/:id/update', component: EventForm },
         { name: 'detail', path: '/:id', component: Event },
       ],
     },

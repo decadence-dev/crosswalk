@@ -76,12 +76,12 @@ export default {
         v-slot="{href, navigate}"
         custom
     >
-      <a class="creation__link" :href="href" @click="navigate"></a>
+      <a class="creation-link" :href="href" @click="navigate"></a>
     </router-link>
     <div class="header">
       <div
           class="menu-btn"
-          v-on:click="isMenuOpened = !isMenuOpened"
+          @click="isMenuOpened = !isMenuOpened"
       >
         <MenuIcon v-if="!isMenuOpened"></MenuIcon>
         <CloseIcon v-if="isMenuOpened"></CloseIcon>
@@ -100,7 +100,7 @@ export default {
     >
       <div
           class="events-sidebar__header"
-          v-on:click="isEventsListOpened = !isEventsListOpened"
+          @click="isEventsListOpened = !isEventsListOpened"
       >
         <DashIcon></DashIcon>
       </div>
@@ -121,7 +121,7 @@ export default {
   max-width: 100%;
   background-color: $black;
 
-  .creation__link {
+  .creation-link {
     position: absolute;
     top: 0;
     bottom: 0;
