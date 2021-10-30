@@ -115,6 +115,14 @@ const EVENT_UPDATE_MUTATION = gql`
   }
 `;
 
+const EVENT_DELETE_MUTATION = gql`
+  mutation deleteEvent($id: ID!) {
+    deleteEvent(input: {id: $id}) {
+      id
+    }
+  }
+`;
+
 export default {
   state: {
     event: {},
@@ -141,6 +149,9 @@ export default {
     },
     updateeEvent(state, event) {
       state.events = [...[event], ...state.events.filter((evt) => evt.id !== event.id)]
+    },
+    removeEvent(state, id) {
+      state.events = state.events.filter((evt) => evt.id !== id)
     },
     setEvents(state, data) {
       state.events = data.events.edges.map((edge) => (edge.node));
@@ -194,6 +205,16 @@ export default {
       }).catch((errors) => {
         const errs = errors.networkError.result.errors.map((error) => (error.message));
         commit('updateErrors', errs);
+      });
+    },
+    async deleteEvent({ commit, state }) {
+      await client.mutate({
+        mutation: EVENT_DELETE_MUTATION,
+        variables: { id: state.event.id },
+      }).then((response) => {
+        const { id } = response.data.deleteEvent;
+        commit('removeEvent', id);
+        router.push({ name: 'map' });
       });
     },
     async updateErrors({ commit }, errors) {

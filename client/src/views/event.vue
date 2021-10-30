@@ -48,6 +48,9 @@ export default {
     getEvent() {
       this.$store.dispatch('getEvent', { id: this.$route.params.id });
     },
+    deleteEvent() {
+      this.$store.dispatch('deleteEvent', { id: this.$route.params.id });
+    },
   },
   mounted() {
     this.getEvent();
@@ -99,8 +102,7 @@ export default {
           <EditIcon class="option__icon"></EditIcon>
           <span class="option__text">Update</span>
         </div>
-        <div class="option option_danger">
-          <a href="" class="option__link"></a>
+        <div class="option option_danger" @click="deleteEvent">
           <TrashIcon class="option__icon"></TrashIcon>
           <span class="option__text">Delete</span>
         </div>
