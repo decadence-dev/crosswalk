@@ -11,6 +11,7 @@ from pagination import MotorConnectionField
 def get_event_projection():
     return {
         "id": 1,
+        "_id": 0,
         "name": 1,
         "event_type": 1,
         "description": 1,
@@ -58,14 +59,14 @@ class Event(graphene.ObjectType):
     async def get_node(info, id):
         collection = info.context["db"].events
         doc = await collection.find_one({"id": uuid.UUID(id)}, get_event_projection())
-        return doc
+        return Event(**doc)
 
     @staticmethod
     async def resolve_created_date(root, info, **kwargs):
         timezone = pytz.timezone(info.context["timezone"])
         return (
-            root["created_date"].astimezone(timezone)
-            if "created_date" in root
+            root.created_date.astimezone(timezone)
+            if root.created_date is not None
             else None
         )
 

@@ -19,8 +19,8 @@ export default {
 
 <template lang="html">
   <input
-      class="input"
       type="text"
+      class="input"
       v-on="$listeners"
       @input="$emit('update', $event.target.value)"
       :name="name"
@@ -42,6 +42,7 @@ export default {
 
   &:focus {
     outline: none;
+    box-shadow: 0 0 0 2px $black, 0 0 0 4px $grey;
   }
 
   &::placeholder {

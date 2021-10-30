@@ -33,6 +33,12 @@ export default {
         this.query = value;
       },
     },
+    errors() {
+      return this.$store.state.globalErrors;
+    },
+    hasErrors() {
+      return this.$store.state.globalErrors != null;
+    },
   },
   methods: {
     login() {
@@ -43,23 +49,8 @@ export default {
           });
         });
     },
-    searchSubmit(e) {
-      e.preventDefault();
-      this.$store.dispatch(
-        'getEvents',
-        { ...this.query, first: 10 },
-      );
-    },
-    fetchMore(e) {
-      e.preventDefault();
-      this.$store.dispatch(
-        'fetchMoreEvents',
-        {
-          ...this.query,
-          after: this.$store.state.endCursor,
-          first: 10,
-        },
-      );
+    resolveError(errorkey) {
+      this.$store.dispatch('resolveErrors', [errorkey]);
     },
   },
   mounted() {
@@ -72,6 +63,21 @@ export default {
 
 <template lang="html">
   <div class="map">
+    <div v-show="hasErrors" class="errors">
+      <span
+          class="error"
+          v-for="error in errors"
+          :key="error.key"
+          @click="resolveError(error.key)"
+      >{{ error.message }}</span>
+    </div>
+    <router-link
+        :to="{ name: 'create' }"
+        v-slot="{href, navigate}"
+        custom
+    >
+      <a class="creation__link" :href="href" @click="navigate"></a>
+    </router-link>
     <div class="header">
       <div
           class="menu-btn"
@@ -88,7 +94,6 @@ export default {
     >
       <Navbar></Navbar>
     </aside>
-    <router-view></router-view>
     <aside
         class="events-sidebar"
         v-bind:class="{ 'events-sidebar_opened': isEventsListOpened }"
@@ -115,6 +120,40 @@ export default {
   flex: 1 0 auto;
   max-width: 100%;
   background-color: $black;
+
+  .creation__link {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+  }
+}
+
+.errors {
+  z-index: 10;
+  position: absolute;
+  align-self: center;
+  display: flex;
+  flex-flow: column;
+  right: 0;
+  left: 0;
+  padding: 16px 0 0;
+  align-items: center;
+
+  .error {
+    display: none;
+    padding: 8px;
+    margin: 8px 0 0;
+    color: $white;
+    background-color: $red;
+    max-width: 224px;
+    font: $help;
+
+    &:last-child {
+      display: inline;
+    }
+  }
 }
 
 .header {

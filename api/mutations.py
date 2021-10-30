@@ -32,6 +32,8 @@ class CreateEventMutation(relay.ClientIDMutation):
     async def mutate_and_get_payload(root, info, **input):
         current_date = datetime.now()
         credentials = info.context["credentials"]
+        if not input["address"]:
+            raise Exception("Address value cannot be empty string")
         doc = {
             "id": uuid.uuid4(),
             "event_type": input["event_type"],

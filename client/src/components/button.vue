@@ -21,9 +21,11 @@ export default {
   background-color: $yellow;
   font: $help;
   color: $black;
+  border: none;
 
   &:focus {
     outline: none;
+    box-shadow: 0 0 0 2px $black, 0 0 0 4px $grey;
   }
 }
 </style>
