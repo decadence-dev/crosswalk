@@ -69,7 +69,7 @@ export default {
       <CloseIcon></CloseIcon>
     </div>
     <form @submit="submitEvent" class="event-form">
-      <div class="field">
+      <div class="field" v-bind:class="{field_error: errors.includes('address')}">
         <label class="field__label field__label_required" for="address">
           Address
         </label>
@@ -81,21 +81,22 @@ export default {
             name="address"
             placeholder="Enter address"
         ></Input>
-        <small v-show="errors.includes('address')" class="field__error">
+        <small class="field__error">
           This field is required
         </small>
       </div>
-      <div class="field">
+      <div class="field" v-bind:class="{field_error: errors.includes('eventType')}">
         <label class="field__label field__label_required" for="eventType">
           Event type
         </label>
         <EventType
             @blur="validateRequired('eventType', $event.target.value)"
             id="eventType"
+            class="field__input"
             name="eventType"
             v-model="event.eventType"
         ></EventType>
-        <small v-show="errors.includes('eventType')" class="field__error">
+        <small class="field__error">
           This field is required
         </small>
       </div>
@@ -106,7 +107,7 @@ export default {
         <Textarea
             id="description"
             v-model="event.description"
-            class="file"
+            class="field__input"
             name="description"
             placeholder="Enter description"
             label="Description"
@@ -164,10 +165,19 @@ export default {
       flex-flow: column;
       margin: 0 0 16px;
 
+      &_error {
+        .field__error {
+          display: inline;
+        }
+
+        .field__input {
+          border: 1px solid $red;
+        }
+      }
+
       &__label {
         font: $help;
         color: $yellow;
-        margin: 0 0 8px;
 
         &_required::after {
           content: "*";
@@ -176,6 +186,7 @@ export default {
       }
 
       &__error {
+        display: none;
         margin: 4px 0 0;
         color: $red;
       }

@@ -25,6 +25,7 @@ export default {
 
   &:focus {
     outline: none;
+    box-shadow: 0 0 0 2px $black, 0 0 0 4px $grey;
   }
 }
 </style>
