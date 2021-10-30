@@ -26,6 +26,8 @@ const EVENT_QUERY = gql`
       id
       eventType
       address
+      longitude
+      latitude
       description
       createdDate
       createdBy {
@@ -63,11 +65,42 @@ const EVENT_CREATE_MUTATION = gql`
   ) {
     createEvent (
       input: { 
-          eventType: $eventType, 
-          address: $address, 
-          longitude: $longitude, 
-          latitude: $latitude,
-          description: $description
+        eventType: $eventType, 
+        address: $address, 
+        longitude: $longitude, 
+        latitude: $latitude,
+        description: $description
+      }
+    ) {
+      id
+      eventType
+      address
+      description
+      createdDate
+      createdBy {
+        username
+      }
+    }
+  }
+`;
+
+const EVENT_UPDATE_MUTATION = gql`
+  mutation updateEvent(
+    $id: ID!,
+    $eventType: EventType!, 
+    $address: String!, 
+    $longitude: Float!, 
+    $latitude: Float!,
+    $description: String
+  ) {
+    updateEvent (
+      input: { 
+        id: $id,
+        eventType: $eventType, 
+        address: $address, 
+        longitude: $longitude, 
+        latitude: $latitude,
+        description: $description
       }
     ) {
       id
@@ -85,6 +118,8 @@ const EVENT_CREATE_MUTATION = gql`
 export default {
   state: {
     event: {},
+    hasNextPage: false,
+    endCursor: 0,
     globalErrors: [],
     events: [],
     pageInfo: {},
@@ -103,6 +138,9 @@ export default {
     },
     insertEvent(state, event) {
       state.events = [...[event], ...state.events]
+    },
+    updateeEvent(state, event) {
+      state.events = [...[event], ...state.events.filter((evt) => evt.id !== event.id)]
     },
     setEvents(state, data) {
       state.events = data.events.edges.map((edge) => (edge.node));
@@ -139,6 +177,19 @@ export default {
       }).then((response) => {
         const event = response.data.createEvent;
         commit('insertEvent', event);
+        router.push({ name: 'detail', params: { id: event.id } });
+      }).catch((errors) => {
+        const errs = errors.networkError.result.errors.map((error) => (error.message));
+        commit('updateErrors', errs);
+      });
+    },
+    async updateEvent({ commit, state }) {
+      await client.mutate({
+        mutation: EVENT_UPDATE_MUTATION,
+        variables: { ...state.event },
+      }).then((response) => {
+        const event = response.data.updateEvent;
+        commit('updateeEvent', event);
         router.push({ name: 'detail', params: { id: event.id } });
       }).catch((errors) => {
         const errs = errors.networkError.result.errors.map((error) => (error.message));

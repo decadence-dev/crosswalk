@@ -181,7 +181,7 @@ export default {
       display: flex;
       flex-flow: column;
       align-items: center;
-      margin: 24px 0 0;
+      margin: 24px 0 4px;
     }
   }
 }
