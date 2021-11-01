@@ -17,7 +17,7 @@ export default {
   data: () => ({
     selectedType: null,
     types: [
-      { name: 'ROBERRY', icon: 'RobberyIcon' },
+      { name: 'ROBBERY', icon: 'RobberyIcon' },
       { name: 'FIGHT', icon: 'FightIcon' },
       { name: 'DEATH', icon: '' },
       { name: 'GUN', icon: 'GunrireIcon' },

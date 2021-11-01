@@ -179,6 +179,7 @@ export default {
     align-items: flex-end;
     top: 72px;
     right: 16px;
+    cursor: pointer;
 
     &__button {
       &-icon {
