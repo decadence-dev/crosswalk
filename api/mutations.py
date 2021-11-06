@@ -5,6 +5,7 @@ import graphene
 from graphene import relay
 from graphql_relay import from_global_id
 
+from tasks import send_event_created
 from queries import Event, EventType
 
 
@@ -49,6 +50,8 @@ class CreateEventMutation(relay.ClientIDMutation):
         }
         collection = info.context["db"].events
         await collection.insert_one(doc.copy())
+        background = info.context['background']
+        background.add_task(send_event_created, info.context["producer"], doc)
         return get_event_from_document(doc)
 
 

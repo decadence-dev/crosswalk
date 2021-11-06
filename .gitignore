@@ -1,6 +1,7 @@
 # Environment
 venv/
 .idea/
+.env
 
 # Client
 node_modules/

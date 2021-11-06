@@ -1,7 +1,7 @@
 import pytest
 from motor.motor_asyncio import AsyncIOMotorClient
 
-import main
+from main import settings
 
 
 @pytest.fixture
@@ -12,7 +12,7 @@ async def user():
 @pytest.fixture
 async def db():
     client = AsyncIOMotorClient(
-        main.DATABASE_HOST, main.DATABASE_PORT, uuidRepresentation="standard"
+        settings.database_host, settings.database_port, uuidRepresentation="standard"
     )
-    yield client[main.DATABASE_NAME]
+    yield client[settings.database_name]
     client.drop_database("test")
