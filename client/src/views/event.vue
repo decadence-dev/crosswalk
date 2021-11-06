@@ -2,6 +2,8 @@
 import { mapState } from 'vuex';
 import CloseIcon from '../icons/close.vue';
 import OptionsIcon from '../icons/options.vue';
+import EditIcon from '../icons/edit.vue';
+import TrashIcon from '../icons/trash.vue';
 
 const EVENT_TYPE_MAP = {
   ROBBERY: 'Robbery',
@@ -16,7 +18,12 @@ const EVENT_TYPE_MAP = {
 
 export default {
   name: 'Event',
-  components: { CloseIcon, OptionsIcon },
+  data: () => ({
+    isOptionsOpen: false,
+  }),
+  components: {
+    TrashIcon, EditIcon, CloseIcon, OptionsIcon,
+  },
   computed: {
     ...mapState({
       event: (state) => ({ ...state.event, eventType: EVENT_TYPE_MAP[state.event.eventType] }),
@@ -40,6 +47,9 @@ export default {
   methods: {
     getEvent() {
       this.$store.dispatch('getEvent', { id: this.$route.params.id });
+    },
+    deleteEvent() {
+      this.$store.dispatch('deleteEvent', { id: this.$route.params.id });
     },
   },
   mounted() {
@@ -72,7 +82,32 @@ export default {
       </div>
       <span class="info__description">{{ event.description }}</span>
     </div>
-    <OptionsIcon class="options"></OptionsIcon>
+    <div class="options">
+      <div
+          class="options__button"
+          v-bind:class="{options__button_active: isOptionsOpen}"
+          @click="isOptionsOpen = !isOptionsOpen"
+      >
+        <OptionsIcon class="options__button-icon"></OptionsIcon>
+      </div>
+      <div v-show="isOptionsOpen" class="options__list">
+        <div class="option">
+          <router-link
+              :to="{ name: 'update', params: { id: event.id } }"
+              v-slot="{href, navigate}"
+              custom
+          >
+            <a :href="href" class="option__link" @click="navigate"></a>
+          </router-link>
+          <EditIcon class="option__icon"></EditIcon>
+          <span class="option__text">Update</span>
+        </div>
+        <div class="option option_danger" @click="deleteEvent">
+          <TrashIcon class="option__icon"></TrashIcon>
+          <span class="option__text">Delete</span>
+        </div>
+      </div>
+    </div>
   </aside>
 </template>
 
@@ -139,9 +174,83 @@ export default {
 
   .options {
     position: absolute;
+    display: flex;
+    flex-flow: column;
+    align-items: flex-end;
     top: 72px;
     right: 16px;
-    fill: $yellow;
+    cursor: pointer;
+
+    &__button {
+      &-icon {
+        fill: $yellow;
+      }
+
+      &_active {
+        border-radius: 8px;
+        background-color: $yellow;
+
+        .options__button-icon {
+          fill: $black;
+        }
+      }
+    }
+
+    &__list {
+      margin: 6px 0 0;
+      position: relative;
+      display: flex;
+      flex-flow: column;
+      border-radius: 8px;
+      border: 1px solid $yellow;
+      min-width: 128px;
+
+      &::before {
+        content: "";
+        position: absolute;
+        border-bottom: 6px solid $yellow;
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        right: 5px;
+        top: -6px;
+      }
+
+      .option {
+        position: relative;
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        padding: 4px 8px;
+
+        &__link {
+          position: absolute;
+          top: 0;
+          right: 0;
+          left: 0;
+          bottom: 0;
+        }
+
+        &__icon {
+          margin: 0 4px 0 0;
+          fill: $yellow;
+        }
+
+        &__text {
+          color: $white;
+          font: $help;
+        }
+
+        &_danger {
+          .option__icon {
+            fill: $red;
+          }
+
+          .option__text {
+            color: $red;
+          }
+        }
+      }
+    }
   }
 }
 </style>

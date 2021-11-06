@@ -17,7 +17,7 @@ export default {
   data: () => ({
     selectedType: null,
     types: [
-      { name: 'ROBERRY', icon: 'RobberyIcon' },
+      { name: 'ROBBERY', icon: 'RobberyIcon' },
       { name: 'FIGHT', icon: 'FightIcon' },
       { name: 'DEATH', icon: '' },
       { name: 'GUN', icon: 'GunrireIcon' },
@@ -60,7 +60,7 @@ export default {
         v-for="(type, idx) in types"
         v-bind:key="idx"
         v-bind:class="{ 'eventtype__option_selected': type.name === selected }"
-        v-on:click="selectType(type.name)"
+        @click="selectType(type.name)"
     >
       <component class="eventtype__option-icon" v-bind:is="type.icon"></component>
     </div>

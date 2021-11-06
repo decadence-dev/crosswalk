@@ -70,15 +70,17 @@ class UpdateEventMutation(relay.ClientIDMutation):
         collection = info.context["db"].events
 
         if doc := await collection.find_one({"id": uuid.UUID(_id)}, {"_id": 0}):
-            doc.update(
-                {
+            updated_document = dict(
+                doc,
+                **{
                     key: input[key]
                     for key in doc.keys()
                     if input.get(key) and key != "id"
-                }
+                },
+                changed_date=datetime.now()
             )
-            await collection.update_one({"id": uuid.UUID(_id)}, {"$set": doc.copy()})
-            return get_event_from_document(doc)
+            await collection.update_one({"id": uuid.UUID(_id)}, {"$set": updated_document.copy()})
+            return get_event_from_document(updated_document)
 
         raise Exception(f"Event with id {_id} is not exist.")
 

@@ -100,6 +100,6 @@ class Query(graphene.ObjectType):
         collection = info.context["db"].events
         count = await collection.count_documents(filter)
         cursor = collection.find(filter, get_event_projection()).sort(
-            [("created_date", -1)]
+            [("changed_date", -1)]
         )
         return cursor, count

@@ -27,7 +27,8 @@ export default {
       this.validateRequired('address');
       this.validateRequired('eventType');
       if (!this.hasErrors) {
-        this.$store.dispatch('createEvent');
+        const actionType = this.$route.params.id != null ? 'updateEvent' : 'createEvent';
+        this.$store.dispatch(actionType);
       } else {
         this.$store.dispatch('updateErrors', ['Please resolve form errors before submit']);
       }
@@ -69,7 +70,7 @@ export default {
       <CloseIcon></CloseIcon>
     </div>
     <form @submit="submitEvent" class="event-form">
-      <div class="field" v-bind:class="{field_error: errors.includes('address')}">
+      <div class="field" v-bind:class="{ field_error: errors.includes('address') }">
         <label class="field__label field__label_required" for="address">
           Address
         </label>
@@ -85,7 +86,7 @@ export default {
           This field is required
         </small>
       </div>
-      <div class="field" v-bind:class="{field_error: errors.includes('eventType')}">
+      <div class="field" v-bind:class="{ field_error: errors.includes('eventType') }">
         <label class="field__label field__label_required" for="eventType">
           Event type
         </label>
@@ -165,16 +166,6 @@ export default {
       flex-flow: column;
       margin: 0 0 16px;
 
-      &_error {
-        .field__error {
-          display: inline;
-        }
-
-        .field__input {
-          border: 1px solid $red;
-        }
-      }
-
       &__label {
         font: $help;
         color: $yellow;
@@ -197,6 +188,16 @@ export default {
 
       &__input {
         margin: 8px 0 0;
+      }
+
+      &_error {
+        .field__error {
+          display: inline;
+        }
+
+        .field__input {
+          border: 1px solid $red;
+        }
       }
     }
   }
