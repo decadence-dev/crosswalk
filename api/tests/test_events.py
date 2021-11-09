@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import pytest
 from graphql_relay import to_global_id
 
+from models import EventType, Event
 from tests.utils import graphql
 
 
@@ -72,18 +73,18 @@ async def event(
 async def events(db, faker, user):
     def gen_events():
         for idx in range(0, 100):
-            yield {
-                "id": uuid.uuid4(),
-                "event_type": random.randrange(1, 8),
-                "description": faker.text(),
-                "address": f"address-{idx}",
-                "location": {"type": "Point", "coordinates": [0, 0]},
-                "created_by": user,
-                "created_date": datetime.now() + timedelta(seconds=1 + idx),
-                "changed_date": datetime.now() + timedelta(seconds=1 + idx),
-            }
+            yield Event(
+                event_type=faker.random_element(EventType),
+                description=faker.text(),
+                address=faker.address(),
+                location={"type": "Point", "coordinates": faker.latlng()},
+                created_by=user,
+                created_date=faker.date_time(),
+                changed_date=faker.date_time()
+            ).dict()
 
     _events = list(gen_events())
+    import ipdb; ipdb.set_trace()
     collection = db.events
     await collection.insert_many(_events.copy())
     yield _events
@@ -113,104 +114,7 @@ async def events_with_sprcific_address(db, faker, user, event_address):
     await collection.delete_many({"if": {"$in": [itm["id"] for itm in _events]}})
 
 
-@pytest.mark.asyncio
-@pytest.mark.usefixtures("user", "events")
-async def test_list(user):
-    response = await graphql(
-        """
-        {
-            events {
-                edges {
-                    node {
-                        id
-                    }
-                }
-            }
-        }
-        """,
-        creadentials=user,
-    )
 
-    assert response.status_code == 200
-    assert len(response.json()["data"]["events"]["edges"]) == 100
-
-
-@pytest.mark.asyncio
-@pytest.mark.usefixtures("user", "events", "events_with_sprcific_address")
-@pytest.mark.parametrize(
-    "variables,expected_count", [({}, 120), ({"search": "!@someTest_address"}, 20)]
-)
-async def test_list_search(user, variables, expected_count):
-    response = await graphql(
-        """
-        query fetchEvents ($search: String) {
-            events (search: $search) {
-                edges {
-                    node {
-                        id
-                    }
-                }
-            }
-        }
-        """,
-        creadentials=user,
-        **variables,
-    )
-
-    assert response.status_code == 200
-    assert len(response.json()["data"]["events"]["edges"]) == expected_count
-
-
-@pytest.mark.asyncio
-@pytest.mark.usefixtures("user", "events")
-async def test_events_order(user):
-    response = await graphql(
-        """
-        {
-            events {
-                edges {
-                    node {
-                        address
-                    }
-                }
-            }
-        }
-        """,
-        creadentials=user,
-    )
-
-    assert response.status_code == 200
-    events = response.json()["data"]["events"]["edges"]
-    max_address = max(map(lambda itm: itm["node"]["address"], events))
-    assert events[0]["node"]["address"] == max_address
-
-
-@pytest.mark.asyncio
-@pytest.mark.usefixtures(
-    "user",
-    "event_global_id",
-    "event_longitude",
-    "event_latitude",
-    "event",
-)
-async def test_retrieve(user, event_global_id, event_longitude, event_latitude):
-    response = await graphql(
-        """
-        query getEvent($id: ID!) {
-            event(id: $id) {
-                id
-                longitude
-                latitude
-            }
-        }
-        """,
-        creadentials=user,
-        id=event_global_id,
-    )
-
-    assert response.status_code == 200
-    assert response.json()["data"]["event"]["longitude"] == event_longitude
-    assert response.json()["data"]["event"]["latitude"] == event_latitude
 
 
 @pytest.mark.asyncio

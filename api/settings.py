@@ -10,4 +10,7 @@ class Settings(BaseSettings):
     database_host: str = "localhost"
     database_port: int = 27017
     database_name: str = "crosswalk"
+    global_limit: int = 100
     origins: list = ["*"]
+
+settings = Settings()

@@ -1,9 +1,6 @@
 import pickle
 
-from settings import Settings
-
-
-settings = Settings()
+from settings import settings
 
 
 async def send_event_created(producer, event):

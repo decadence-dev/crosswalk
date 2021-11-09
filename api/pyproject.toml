@@ -8,13 +8,12 @@ authors = ["Anton Petrov <marblemonolit@gmail.com>"]
 python = "^3.9"
 fastapi = "^0.65.0"
 motor = "^2.4.0"
-graphene = "3.0.0b8"
+graphene = "^2.1.9"
 python-jose = "^3.3.0"
 asgi-lifespan = "^1.0.1"
 pytz = "^2021.1"
 aiokafka = "^0.7.2"
 uvicorn = {extras = ["standard"], version = "^0.15.0"}
-graphene-pydantic = "^0.2.0"
 
 [tool.poetry.dev-dependencies]
 ipdb = "0.13.9"

@@ -15,14 +15,12 @@ from starlette.websockets import WebSocket
 
 from mutations import Mutation
 from queries import Query
-from settings import Settings
+from settings import settings
 
 
 app = FastAPI()
 
 security = HTTPBearer()
-
-settings = Settings()
 
 
 async def get_current_user_creadentials(

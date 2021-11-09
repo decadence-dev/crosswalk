@@ -6,7 +6,7 @@ from graphene import relay
 from graphql_relay import from_global_id
 
 from tasks import send_event_created
-from queries import Event, EventType
+from queries import Event, SchemaEventType
 
 
 def get_event_from_document(doc):
@@ -20,7 +20,7 @@ def get_event_from_document(doc):
 
 class CreateEventMutation(relay.ClientIDMutation):
     class Input:
-        event_type = graphene.Field(type=EventType, required=True)
+        event_type = graphene.Field(type=SchemaEventType, required=True)
         description = graphene.String()
 
         address = graphene.String(required=True)
@@ -58,7 +58,7 @@ class CreateEventMutation(relay.ClientIDMutation):
 class UpdateEventMutation(relay.ClientIDMutation):
     class Input:
         id = graphene.ID(required=True)
-        event_type = graphene.Field(type=EventType)
+        event_type = graphene.Field(type=SchemaEventType)
         description = graphene.String()
 
         address = graphene.String()

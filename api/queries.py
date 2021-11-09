@@ -1,38 +1,15 @@
 import re
-import uuid
 
 import graphene
 import pytz
 from graphene import relay
 
-from pagination import MotorConnectionField
+from models import EventType, Event as EventModel
+
+from settings import settings
 
 
-def get_event_projection():
-    return {
-        "id": 1,
-        "_id": 0,
-        "name": 1,
-        "event_type": 1,
-        "description": 1,
-        "address": 1,
-        "created_by": 1,
-        "created_date": 1,
-        "changed_date": 1,
-        "longitude": {"$arrayElemAt": ["$location.coordinates", 0]},
-        "latitude": {"$arrayElemAt": ["$location.coordinates", -1]},
-    }
-
-
-class EventType(graphene.Enum):
-    ROBBERY = 1
-    FIGHT = 2
-    DEATH = 3
-    GUN = 4
-    INADEQUATE = 5
-    ACCEDENT = 6
-    FIRE = 7
-    POLICE = 8
+SchemaEventType = graphene.Enum.from_enum(EventType)
 
 
 class User(graphene.ObjectType):
@@ -44,7 +21,7 @@ class Event(graphene.ObjectType):
     class Meta:
         interfaces = (relay.Node,)
 
-    event_type = graphene.Field(type=EventType)
+    event_type = graphene.Field(type=SchemaEventType)
     description = graphene.String()
 
     address = graphene.String()
@@ -54,12 +31,6 @@ class Event(graphene.ObjectType):
     created_by = graphene.Field(User)
     created_date = graphene.DateTime()
     changed_date = graphene.DateTime()
-
-    @staticmethod
-    async def get_node(info, id):
-        collection = info.context["db"].events
-        doc = await collection.find_one({"id": uuid.UUID(id)}, get_event_projection())
-        return Event(**doc)
 
     @staticmethod
     async def resolve_created_date(root, info, **kwargs):
@@ -74,32 +45,59 @@ class Event(graphene.ObjectType):
     async def resolve_changed_date(root, info, **kwargs):
         timezone = pytz.timezone(info.context["timezone"])
         return (
-            root["changed_date"].astimezone(timezone)
-            if "changed_date" in root
+            root.changed_date.astimezone(timezone)
+            if root.changed_date is not None
             else None
         )
 
 
-class EventConnection(relay.Connection):
-    class Meta:
-        node = Event
+class EventsCollection(graphene.ObjectType):
+    count = graphene.Int(default_value=0)
+    has_next = graphene.Boolean(default_value=False)
+    items = graphene.List(Event, default_value=[])
 
 
 class Query(graphene.ObjectType):
-    event = relay.Node.Field(Event)
-    events = MotorConnectionField(EventConnection, search=graphene.String())
+    event = graphene.Field(Event, id=graphene.UUID(required=True))
+    events = graphene.Field(
+        EventsCollection, limit=graphene.Int(default_value=settings.global_limit), offset=graphene.Int(default_value=0), search=graphene.String()
+    )
+
+    @staticmethod
+    async def resolve_event(root, info, id):
+        collection = info.context["db"].events
+        doc = await collection.find_one({"id": id})
+        return EventModel(**doc)
 
     @staticmethod
     async def resolve_events(root, info, **kwargs):
-        filter = {}
-        if value := kwargs.get("search"):
+        # Creating filter for documents counting
+        query = {}
+        if search := kwargs.get("search"):
             # TODO replace filter with mongo text index
-            pattern = re.compile(f".*{value}.*", re.IGNORECASE)
-            filter.update({"address": pattern})
+            pattern = re.compile(f".*{search}.*", re.IGNORECASE)
+            query.update({'address': pattern})
+
+        # Creating pipelines from query for documents filtering
+        pipelines = [{'$match': {key: value}} for key, value in query.items()]
+
+        # Updating pipelines with limit, offset and sort aggregations
+        if offset := kwargs.get('offset'):
+            if offset < 0:
+                raise ValueError('Offset cannot be negative')
+            pipelines.append({'$skip': offset})
+        if limit := kwargs.get('limit'):
+            if limit < 0:
+                raise ValueError('Limit cannot be negative')
+            pipelines.append({'$limit': limit})
+        pipelines.append({'$sort': {'changed_date': -1}})
 
         collection = info.context["db"].events
-        count = await collection.count_documents(filter)
-        cursor = collection.find(filter, get_event_projection()).sort(
-            [("changed_date", -1)]
+        count = await collection.count_documents(query)
+        cursor = collection.aggregate(pipelines)
+
+        return EventsCollection(
+            count=count,
+            has_next=offset + limit < count and limit != 0,
+            items=[EventModel(**doc) async for doc in cursor]
         )
-        return cursor, count

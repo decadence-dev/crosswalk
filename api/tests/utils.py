@@ -8,7 +8,7 @@ from jose import jwt
 from main import settings, app
 
 
-async def graphql(query: str, creadentials: Optional[Dict] = None, **kwargs):
+async def graphql(query: str, creadentials: Optional[Dict] = None, cookies: Optional[Dict] = None, **kwargs):
     headers = {}
     if creadentials is not None:
         payload = creadentials.copy()
@@ -20,6 +20,7 @@ async def graphql(query: str, creadentials: Optional[Dict] = None, **kwargs):
     async with AsyncClient(
         app=app,
         headers=headers,
+        cookies=cookies,
         base_url="http://localhost:8000",
     ) as ac, LifespanManager(app):
         return await ac.post("/", json={"query": query, "variables": kwargs})
