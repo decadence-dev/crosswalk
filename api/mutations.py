@@ -5,8 +5,8 @@ import graphene
 from graphene import relay
 from graphql_relay import from_global_id
 
-from tasks import send_event_created
 from queries import Event, SchemaEventType
+from tasks import send_event_created
 
 
 def get_event_from_document(doc):
@@ -50,7 +50,7 @@ class CreateEventMutation(relay.ClientIDMutation):
         }
         collection = info.context["db"].events
         await collection.insert_one(doc.copy())
-        background = info.context['background']
+        background = info.context["background"]
         background.add_task(send_event_created, info.context["producer"], doc)
         return get_event_from_document(doc)
 
@@ -80,9 +80,11 @@ class UpdateEventMutation(relay.ClientIDMutation):
                     for key in doc.keys()
                     if input.get(key) and key != "id"
                 },
-                changed_date=datetime.now()
+                changed_date=datetime.now(),
             )
-            await collection.update_one({"id": uuid.UUID(_id)}, {"$set": updated_document.copy()})
+            await collection.update_one(
+                {"id": uuid.UUID(_id)}, {"$set": updated_document.copy()}
+            )
             return get_event_from_document(updated_document)
 
         raise Exception(f"Event with id {_id} is not exist.")

@@ -5,15 +5,23 @@ from asgi_lifespan import LifespanManager
 from httpx import AsyncClient
 from jose import jwt
 
-from main import settings, app
+from main import app, settings
 
 
-async def graphql(query: str, creadentials: Optional[Dict] = None, cookies: Optional[Dict] = None, **kwargs):
+async def graphql(
+    query: str,
+    creadentials: Optional[Dict] = None,
+    cookies: Optional[Dict] = None,
+    **kwargs,
+):
     headers = {}
     if creadentials is not None:
         payload = creadentials.copy()
         payload.update(
-            {"exp": datetime.now() + timedelta(minutes=settings.auth_expiration_minutes)}
+            {
+                "exp": datetime.now()
+                + timedelta(minutes=settings.auth_expiration_minutes)
+            }
         )
         token = jwt.encode(payload, settings.secret_key, algorithm="HS256")
         headers = {"Authorization": f"bearer {token}"}

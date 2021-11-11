@@ -1,10 +1,9 @@
 import uuid
 from datetime import datetime
+from enum import IntEnum
 from typing import Optional, Tuple
 
 import pydantic
-
-from enum import IntEnum
 
 
 class EventType(IntEnum):
@@ -24,7 +23,7 @@ class User(pydantic.BaseModel):
 
 
 class Location(pydantic.BaseModel):
-    type: str = 'Point'
+    type: str = "Point"
     coordinates: Tuple[float, float] = pydantic.Field(...)
 
 

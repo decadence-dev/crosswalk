@@ -18,7 +18,7 @@ async def changed_date(faker):
 
 
 @pytest.fixture
-@pytest.mark.usefixtures("db", "faker", "user", 'created_date', 'changed_date')
+@pytest.mark.usefixtures("db", "faker", "user", "created_date", "changed_date")
 async def event(db, faker, user, created_date, changed_date):
     collection = db.events
     instance = Event(
@@ -28,7 +28,7 @@ async def event(db, faker, user, created_date, changed_date):
         location={"type": "Point", "coordinates": [0.0, 0.0]},
         created_by=user,
         created_date=created_date,
-        changed_date=changed_date
+        changed_date=changed_date,
     )
     await collection.insert_one(instance.dict())
     yield instance
@@ -80,9 +80,9 @@ async def test_event_location(user, event):
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures("user", "event", 'created_date')
+@pytest.mark.usefixtures("user", "event", "created_date")
 @pytest.mark.parametrize(
-    'timezone', ['UTC', 'America/New_York', 'Australia/Sydney', 'Europe/Moscow']
+    "timezone", ["UTC", "America/New_York", "Australia/Sydney", "Europe/Moscow"]
 )
 async def test_event_created_date_with_timezone(user, event, created_date, timezone):
     """
@@ -100,20 +100,20 @@ async def test_event_created_date_with_timezone(user, event, created_date, timez
         }
         """,
         creadentials=user,
-        cookies={'timezone': timezone},
+        cookies={"timezone": timezone},
         id=str(event.id),
     )
 
     assert response.status_code == 200
     timezoned_date = created_date.astimezone(pytz.timezone(timezone))
-    timezoned_string = str(timezoned_date).replace(' ', 'T')
+    timezoned_string = str(timezoned_date).replace(" ", "T")
     assert response.json()["data"]["event"]["createdDate"] == timezoned_string
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures("user", "event", 'changed_date')
+@pytest.mark.usefixtures("user", "event", "changed_date")
 @pytest.mark.parametrize(
-    'timezone', ['UTC', 'America/New_York', 'Australia/Sydney', 'Europe/Moscow']
+    "timezone", ["UTC", "America/New_York", "Australia/Sydney", "Europe/Moscow"]
 )
 async def test_event_changed_date_with_timezone(user, event, changed_date, timezone):
     """
@@ -131,11 +131,11 @@ async def test_event_changed_date_with_timezone(user, event, changed_date, timez
         }
         """,
         creadentials=user,
-        cookies={'timezone': timezone},
+        cookies={"timezone": timezone},
         id=str(event.id),
     )
 
     assert response.status_code == 200
     timezoned_date = changed_date.astimezone(pytz.timezone(timezone))
-    timezoned_string = str(timezoned_date).replace(' ', 'T')
+    timezoned_string = str(timezoned_date).replace(" ", "T")
     assert response.json()["data"]["event"]["changedDate"] == timezoned_string

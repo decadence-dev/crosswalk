@@ -2,13 +2,13 @@ import pickle
 from datetime import datetime, timedelta
 
 import graphene
-from aiokafka import AIOKafkaProducer, AIOKafkaConsumer
+from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
 from fastapi import Cookie, Depends, FastAPI, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from starlette import status
-from starlette.graphql import GraphQLApp, AsyncioExecutor
+from starlette.graphql import AsyncioExecutor, GraphQLApp
 from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 from starlette.websockets import WebSocket
@@ -16,7 +16,6 @@ from starlette.websockets import WebSocket
 from mutations import Mutation
 from queries import Query
 from settings import settings
-
 
 app = FastAPI()
 
@@ -27,7 +26,9 @@ async def get_current_user_creadentials(
     credentials: HTTPAuthorizationCredentials = Depends(security),
 ):
     try:
-        data = jwt.decode(credentials.credentials, settings.secret_key, algorithms=["HS256"])
+        data = jwt.decode(
+            credentials.credentials, settings.secret_key, algorithms=["HS256"]
+        )
         if datetime.fromtimestamp(data["exp"]) <= datetime.now():
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Token is expired"
@@ -53,7 +54,9 @@ async def get_producer():
 
 
 async def get_consumer():
-    consumer = AIOKafkaConsumer(settings.actions_topic, bootstrap_servers=settings.bootstrap_servers)
+    consumer = AIOKafkaConsumer(
+        settings.actions_topic, bootstrap_servers=settings.bootstrap_servers
+    )
     await consumer.start()
     yield consumer
     await consumer.stop()
@@ -114,10 +117,10 @@ async def main(
     timezone: str = Cookie("UTC"),
     credentials: dict = Depends(get_current_user_creadentials),
     db: AsyncIOMotorDatabase = Depends(get_db),
-    producer: AIOKafkaProducer = Depends(get_producer)
+    producer: AIOKafkaProducer = Depends(get_producer),
 ):
     request.db = db
-    request.producer=producer
+    request.producer = producer
     request.timezone = timezone
     request.credentials = credentials
     return await graphql_app.handle_graphql(request)
@@ -136,7 +139,9 @@ async def get_token():
 
 
 @app.websocket("/events-actions")
-async def events_statuses_sender(websocket: WebSocket, consumer: AIOKafkaConsumer = Depends(get_consumer)):
+async def events_statuses_sender(
+    websocket: WebSocket, consumer: AIOKafkaConsumer = Depends(get_consumer)
+):
     await websocket.accept()
     async for msg in consumer:
         await websocket.send_json(pickle.loads(msg.value))

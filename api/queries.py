@@ -4,10 +4,9 @@ import graphene
 import pytz
 from graphene import relay
 
-from models import EventType, Event as EventModel
-
+from models import Event as EventModel
+from models import EventType
 from settings import settings
-
 
 SchemaEventType = graphene.Enum.from_enum(EventType)
 
@@ -60,7 +59,10 @@ class EventsCollection(graphene.ObjectType):
 class Query(graphene.ObjectType):
     event = graphene.Field(Event, id=graphene.UUID(required=True))
     events = graphene.Field(
-        EventsCollection, limit=graphene.Int(default_value=settings.global_limit), offset=graphene.Int(default_value=0), search=graphene.String()
+        EventsCollection,
+        limit=graphene.Int(default_value=settings.global_limit),
+        offset=graphene.Int(default_value=0),
+        search=graphene.String(),
     )
 
     @staticmethod
@@ -76,21 +78,21 @@ class Query(graphene.ObjectType):
         if search := kwargs.get("search"):
             # TODO replace filter with mongo text index
             pattern = re.compile(f".*{search}.*", re.IGNORECASE)
-            query.update({'address': pattern})
+            query.update({"address": pattern})
 
         # Creating pipelines from query for documents filtering
-        pipelines = [{'$match': {key: value}} for key, value in query.items()]
+        pipelines = [{"$match": {key: value}} for key, value in query.items()]
 
         # Updating pipelines with limit, offset and sort aggregations
-        if offset := kwargs.get('offset'):
+        if offset := kwargs.get("offset"):
             if offset < 0:
-                raise ValueError('Offset cannot be negative')
-            pipelines.append({'$skip': offset})
-        if limit := kwargs.get('limit'):
+                raise ValueError("Offset cannot be negative")
+            pipelines.append({"$skip": offset})
+        if limit := kwargs.get("limit"):
             if limit < 0:
-                raise ValueError('Limit cannot be negative')
-            pipelines.append({'$limit': limit})
-        pipelines.append({'$sort': {'changed_date': -1}})
+                raise ValueError("Limit cannot be negative")
+            pipelines.append({"$limit": limit})
+        pipelines.append({"$sort": {"changed_date": -1}})
 
         collection = info.context["db"].events
         count = await collection.count_documents(query)
@@ -99,5 +101,5 @@ class Query(graphene.ObjectType):
         return EventsCollection(
             count=count,
             has_next=offset + limit < count and limit != 0,
-            items=[EventModel(**doc) async for doc in cursor]
+            items=[EventModel(**doc) async for doc in cursor],
         )

@@ -19,9 +19,9 @@ async def events(db, faker, user):
                 location={"type": "Point", "coordinates": faker.latlng()},
                 created_by=user,
                 created_date=faker.date_time(),
-                changed_date=faker.date_time()
+                changed_date=faker.date_time(),
             ).dict(),
-            range(0, 100)
+            range(0, 100),
         )
     )
     yield result.inserted_ids
@@ -29,7 +29,7 @@ async def events(db, faker, user):
 
 
 @pytest.fixture
-@pytest.mark.usefixtures('db', 'faker', 'user')
+@pytest.mark.usefixtures("db", "faker", "user")
 async def iwakura_events(db, faker, user):
     collection = db.events
     result = await collection.insert_many(
@@ -37,13 +37,13 @@ async def iwakura_events(db, faker, user):
             lambda itm: Event(
                 event_type=faker.random_element(EventType),
                 description=faker.text(),
-                address='Iwakura',
+                address="Iwakura",
                 location={"type": "Point", "coordinates": faker.latlng()},
                 created_by=user,
                 created_date=faker.date_time(),
-                changed_date=faker.date_time()
+                changed_date=faker.date_time(),
             ).dict(),
-            range(0, 10)
+            range(0, 10),
         )
     )
     yield result.inserted_ids
@@ -51,50 +51,46 @@ async def iwakura_events(db, faker, user):
 
 
 @pytest.fixture
-@pytest.mark.usefixtures('db', 'faker', 'user')
+@pytest.mark.usefixtures("db", "faker", "user")
 async def february_events(db, faker, user):
     docs = [
         {
             "event_type": faker.random_element(EventType),
             "description": faker.text(),
-            "address": 'Iwakura',
+            "address": "Iwakura",
             "location": {"type": "Point", "coordinates": faker.latlng()},
             "created_by": user,
             "created_date": faker.date_time(),
-            "changed_date": datetime.strptime('01.02.2030', '%d.%m.%Y')
+            "changed_date": datetime.strptime("01.02.2030", "%d.%m.%Y"),
         },
         {
             "event_type": faker.random_element(EventType),
             "description": faker.text(),
-            "address": 'Inazawa',
+            "address": "Inazawa",
             "location": {"type": "Point", "coordinates": faker.latlng()},
             "created_by": user,
             "created_date": faker.date_time(),
-            "changed_date": datetime.strptime('16.02.2030', '%d.%m.%Y')
+            "changed_date": datetime.strptime("16.02.2030", "%d.%m.%Y"),
         },
         {
             "event_type": faker.random_element(EventType),
             "description": faker.text(),
-            "address": 'Nagakute',
+            "address": "Nagakute",
             "location": {"type": "Point", "coordinates": faker.latlng()},
             "created_by": user,
             "created_date": faker.date_time(),
-            "changed_date": datetime.strptime('24.02.2030', '%d.%m.%Y')
-        }
+            "changed_date": datetime.strptime("24.02.2030", "%d.%m.%Y"),
+        },
     ]
     collection = db.events
-    result = await collection.insert_many(
-        map(lambda doc: Event(**doc).dict(), docs)
-    )
+    result = await collection.insert_many(map(lambda doc: Event(**doc).dict(), docs))
     yield result.inserted_ids
     await collection.delete_many({"id": {"$in": result.inserted_ids}})
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize(
-    'limit', (None, 0, 110)
-)
-@pytest.mark.usefixtures("user", "events", 'limit')
+@pytest.mark.parametrize("limit", (None, 0, 110))
+@pytest.mark.usefixtures("user", "events", "limit")
 async def test_list_unlimited_query(user, limit):
     response = await graphql(
         """
@@ -109,13 +105,13 @@ async def test_list_unlimited_query(user, limit):
         }
         """,
         creadentials=user,
-        limit=limit
+        limit=limit,
     )
 
     assert response.status_code == 200
     assert len(response.json()["data"]["events"]["items"]) == 100
     assert response.json()["data"]["events"]["count"] == 100
-    assert response.json()["data"]["events"]["hasNext"] == False
+    assert response.json()["data"]["events"]["hasNext"] is False
 
 
 @pytest.mark.asyncio
@@ -134,13 +130,13 @@ async def test_list_query_with_limit_10(user):
         }
         """,
         creadentials=user,
-        limit=10
+        limit=10,
     )
 
     assert response.status_code == 200
     assert len(response.json()["data"]["events"]["items"]) == 10
     assert response.json()["data"]["events"]["count"] == 100
-    assert response.json()["data"]["events"]["hasNext"] == True
+    assert response.json()["data"]["events"]["hasNext"] is True
 
 
 @pytest.mark.asyncio
@@ -159,7 +155,7 @@ async def test_list_query_with_negative_limit(user):
         }
         """,
         creadentials=user,
-        limit=-10
+        limit=-10,
     )
 
     assert response.status_code == 400
@@ -181,13 +177,13 @@ async def test_list_query_with_offset_10(user):
         }
         """,
         creadentials=user,
-        offset=10
+        offset=10,
     )
 
     assert response.status_code == 200
     assert len(response.json()["data"]["events"]["items"]) == 90
     assert response.json()["data"]["events"]["count"] == 100
-    assert response.json()["data"]["events"]["hasNext"] == False
+    assert response.json()["data"]["events"]["hasNext"] is False
 
 
 @pytest.mark.asyncio
@@ -206,13 +202,13 @@ async def test_list_query_with_offset_110(user):
         }
         """,
         creadentials=user,
-        offset=110
+        offset=110,
     )
 
     assert response.status_code == 200
     assert len(response.json()["data"]["events"]["items"]) == 0
     assert response.json()["data"]["events"]["count"] == 100
-    assert response.json()["data"]["events"]["hasNext"] == False
+    assert response.json()["data"]["events"]["hasNext"] is False
 
 
 @pytest.mark.asyncio
@@ -231,7 +227,7 @@ async def test_list_query_with_negative_offset(user):
         }
         """,
         creadentials=user,
-        offset=-10
+        offset=-10,
     )
 
     assert response.status_code == 400
@@ -254,13 +250,13 @@ async def test_list_query_from_the_middle(user):
         """,
         creadentials=user,
         offset=20,
-        limit=10
+        limit=10,
     )
 
     assert response.status_code == 200
     assert len(response.json()["data"]["events"]["items"]) == 10
     assert response.json()["data"]["events"]["count"] == 100
-    assert response.json()["data"]["events"]["hasNext"] == True
+    assert response.json()["data"]["events"]["hasNext"] is True
 
 
 @pytest.mark.asyncio
@@ -280,20 +276,18 @@ async def test_list_query_from_the_end(user):
         """,
         creadentials=user,
         offset=95,
-        limit=10
+        limit=10,
     )
 
     assert response.status_code == 200
     assert len(response.json()["data"]["events"]["items"]) == 5
     assert response.json()["data"]["events"]["count"] == 100
-    assert response.json()["data"]["events"]["hasNext"] == False
+    assert response.json()["data"]["events"]["hasNext"] is False
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures("user", "events", 'iwakura_events')
-@pytest.mark.parametrize(
-    'address', ['iwakura', 'iwa', 'Iwakura', 'IwaKUrA']
-)
+@pytest.mark.usefixtures("user", "events", "iwakura_events")
+@pytest.mark.parametrize("address", ["iwakura", "iwa", "Iwakura", "IwaKUrA"])
 async def test_search(user, address):
     """
     Test search with Iwakura events with addres in different uppercases
@@ -314,20 +308,18 @@ async def test_search(user, address):
         }
         """,
         creadentials=user,
-        search=address
+        search=address,
     )
 
     assert response.status_code == 200
     assert len(response.json()["data"]["events"]["items"]) == 10
     assert response.json()["data"]["events"]["count"] == 10
-    assert response.json()["data"]["events"]["hasNext"] == False
+    assert response.json()["data"]["events"]["hasNext"] is False
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures("user", "events", 'iwakura_events')
-@pytest.mark.parametrize(
-    'address', ['yuzawa', 'awa', 'Yuzawa', 'yUZaWa']
-)
+@pytest.mark.usefixtures("user", "events", "iwakura_events")
+@pytest.mark.parametrize("address", ["yuzawa", "awa", "Yuzawa", "yUZaWa"])
 async def test_search_with_undexsisting_address(user, address):
     """
     Test search with Yuzawa events with addres in different uppercases
@@ -348,13 +340,13 @@ async def test_search_with_undexsisting_address(user, address):
         }
         """,
         creadentials=user,
-        search=address
+        search=address,
     )
 
     assert response.status_code == 200
     assert len(response.json()["data"]["events"]["items"]) == 0
     assert response.json()["data"]["events"]["count"] == 0
-    assert response.json()["data"]["events"]["hasNext"] == False
+    assert response.json()["data"]["events"]["hasNext"] is False
 
 
 @pytest.mark.asyncio
@@ -370,9 +362,9 @@ async def test_sort(user):
             }
         }
         """,
-        creadentials=user
+        creadentials=user,
     )
 
     assert response.status_code == 200
-    items  = [itm['address'] for itm in response.json()["data"]["events"]["items"]]
-    assert ['Nagakute', 'Inazawa', 'Iwakura'] == items
+    items = [itm["address"] for itm in response.json()["data"]["events"]["items"]]
+    assert ["Nagakute", "Inazawa", "Iwakura"] == items

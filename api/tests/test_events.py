@@ -1,11 +1,11 @@
 import random
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import pytest
 from graphql_relay import to_global_id
 
-from models import EventType, Event
+from models import Event, EventType
 from tests.utils import graphql
 
 
@@ -80,11 +80,13 @@ async def events(db, faker, user):
                 location={"type": "Point", "coordinates": faker.latlng()},
                 created_by=user,
                 created_date=faker.date_time(),
-                changed_date=faker.date_time()
+                changed_date=faker.date_time(),
             ).dict()
 
     _events = list(gen_events())
-    import ipdb; ipdb.set_trace()
+    import ipdb
+
+    ipdb.set_trace()
     collection = db.events
     await collection.insert_many(_events.copy())
     yield _events
@@ -112,9 +114,6 @@ async def events_with_sprcific_address(db, faker, user, event_address):
     await collection.insert_many(_events.copy())
     yield _events
     await collection.delete_many({"if": {"$in": [itm["id"] for itm in _events]}})
-
-
-
 
 
 @pytest.mark.asyncio
