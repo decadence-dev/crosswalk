@@ -1,4 +1,4 @@
-import pickle
+import json
 from datetime import datetime, timedelta
 
 import graphene
@@ -42,7 +42,7 @@ async def get_db():
     client = AsyncIOMotorClient(
         settings.database_host, settings.database_port, uuidRepresentation="standard"
     )
-    yield client[settings.database_name]
+    yield client[settings.database_name if not settings.test else "test"]
     client.close()
 
 
@@ -142,6 +142,13 @@ async def get_token():
 async def events_statuses_sender(
     websocket: WebSocket, consumer: AIOKafkaConsumer = Depends(get_consumer)
 ):
+    # TODO add "token" query paramenter and jwt check
     await websocket.accept()
-    async for msg in consumer:
-        await websocket.send_json(pickle.loads(msg.value))
+    if not settings.test:
+        async for msg in consumer:
+            # TODO add timezone for createdDate and changedDate before send
+            await websocket.send_json(json.loads(msg.value))
+    else:
+        msg = await consumer.getone()
+        await websocket.send_json(json.loads(msg.value))
+    await websocket.close()

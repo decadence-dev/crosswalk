@@ -4,6 +4,13 @@ from enum import IntEnum
 from typing import Optional, Tuple
 
 import pydantic
+from graphene.utils.str_converters import to_camel_case
+
+
+class CamelCasedModel(pydantic.BaseModel):
+    class Config:
+        alias_generator = to_camel_case
+        allow_population_by_field_name = True
 
 
 class EventType(IntEnum):
@@ -27,8 +34,9 @@ class Location(pydantic.BaseModel):
     coordinates: Tuple[float, float] = pydantic.Field(...)
 
 
-class Event(pydantic.BaseModel):
+class Event(CamelCasedModel):
     id: Optional[uuid.UUID] = pydantic.Field(default_factory=uuid.uuid4)
+    description: Optional[str] = ""
     address: str = pydantic.Field(...)
     event_type: EventType = pydantic.Field(...)
     location: Location = pydantic.Field(...)
@@ -44,3 +52,15 @@ class Event(pydantic.BaseModel):
     @property
     def latitude(self):
         return self.location.coordinates[1]
+
+
+class EventActionType(IntEnum):
+    CREATE = 1
+    UPDATE = 2
+    DELETE = 3
+
+
+class EventAction(CamelCasedModel):
+    id: uuid.UUID
+    action_type: EventActionType
+    data: Event

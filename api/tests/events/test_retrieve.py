@@ -1,5 +1,6 @@
 import pytest
 import pytz
+from starlette import status
 
 from models import Event, EventType
 from tests.utils import graphql
@@ -51,7 +52,7 @@ async def test_event_coordinates_properties(user, event):
         id=str(event.id),
     )
 
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     assert response.json()["data"]["event"]["longitude"] == 0.0
     assert response.json()["data"]["event"]["latitude"] == 0.0
 
@@ -104,7 +105,7 @@ async def test_event_created_date_with_timezone(user, event, created_date, timez
         id=str(event.id),
     )
 
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     timezoned_date = created_date.astimezone(pytz.timezone(timezone))
     timezoned_string = str(timezoned_date).replace(" ", "T")
     assert response.json()["data"]["event"]["createdDate"] == timezoned_string
@@ -135,7 +136,7 @@ async def test_event_changed_date_with_timezone(user, event, changed_date, timez
         id=str(event.id),
     )
 
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     timezoned_date = changed_date.astimezone(pytz.timezone(timezone))
     timezoned_string = str(timezoned_date).replace(" ", "T")
     assert response.json()["data"]["event"]["changedDate"] == timezoned_string

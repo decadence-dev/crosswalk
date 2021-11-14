@@ -14,5 +14,5 @@ async def db():
     client = AsyncIOMotorClient(
         settings.database_host, settings.database_port, uuidRepresentation="standard"
     )
-    yield client[settings.database_name]
+    yield client[settings.database_name if not settings.test else "test"]
     client.drop_database("test")

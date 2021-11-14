@@ -84,9 +84,6 @@ async def events(db, faker, user):
             ).dict()
 
     _events = list(gen_events())
-    import ipdb
-
-    ipdb.set_trace()
     collection = db.events
     await collection.insert_many(_events.copy())
     yield _events
@@ -114,70 +111,6 @@ async def events_with_sprcific_address(db, faker, user, event_address):
     await collection.insert_many(_events.copy())
     yield _events
     await collection.delete_many({"if": {"$in": [itm["id"] for itm in _events]}})
-
-
-@pytest.mark.asyncio
-@pytest.mark.usefixtures("db", "user")
-@pytest.mark.parametrize(
-    "input,result",
-    [
-        (
-            {
-                "eventType": "ROBBERY",
-                "address": "some address",
-                "longitude": 1,
-                "latitude": 2,
-            },
-            {
-                "data": {
-                    "createEvent": {
-                        "eventType": "ROBBERY",
-                        "address": "some address",
-                        "createdBy": {"username": "mockuser"},
-                        "longitude": 1.0,
-                        "latitude": 2.0,
-                    }
-                }
-            },
-        )
-    ],
-)
-async def test_create(db, user, input, result):
-    response = await graphql(
-        """
-        mutation createEvent(
-            $eventType: EventType!,
-            $address: String!,
-            $longitude: Float!,
-            $latitude: Float!
-        ) {
-            createEvent (
-                input: {
-                    eventType: $eventType,
-                    address: $address,
-                    longitude: $longitude
-                    latitude: $latitude
-                }
-            ) {
-                address
-                eventType
-                longitude
-                latitude
-                createdBy {
-                    username
-                }
-            }
-        }
-        """,
-        creadentials=user,
-        **input,
-    )
-
-    assert response.status_code == 200
-    assert response.json() == result
-
-    doc = await db.events.find_one({}, {"_id": 0, "events": 1, "address": 1})
-    assert doc["address"] == "some address"
 
 
 @pytest.mark.asyncio

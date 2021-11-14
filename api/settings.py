@@ -4,6 +4,7 @@ from pydantic import BaseSettings
 class Settings(BaseSettings):
     auth_expiration_minutes: int = 60
     debug: bool = True
+    test: bool = False
     secret_key: str = "secret"
     actions_topic: str = "events-actions"
     bootstrap_servers: list = ["kafka:9092"]

@@ -1,6 +1,7 @@
 from datetime import datetime
 
 import pytest
+from starlette import status
 
 from models import Event, EventType
 from tests.utils import graphql
@@ -91,7 +92,7 @@ async def february_events(db, faker, user):
 @pytest.mark.asyncio
 @pytest.mark.parametrize("limit", (None, 0, 110))
 @pytest.mark.usefixtures("user", "events", "limit")
-async def test_list_unlimited_query(user, limit):
+async def test_list_unlimited_query(user, events, limit):
     response = await graphql(
         """
         query fetchEventsWithNoLimits($limit: Int) {
@@ -108,7 +109,7 @@ async def test_list_unlimited_query(user, limit):
         limit=limit,
     )
 
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     assert len(response.json()["data"]["events"]["items"]) == 100
     assert response.json()["data"]["events"]["count"] == 100
     assert response.json()["data"]["events"]["hasNext"] is False
@@ -133,7 +134,7 @@ async def test_list_query_with_limit_10(user):
         limit=10,
     )
 
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     assert len(response.json()["data"]["events"]["items"]) == 10
     assert response.json()["data"]["events"]["count"] == 100
     assert response.json()["data"]["events"]["hasNext"] is True
@@ -180,7 +181,7 @@ async def test_list_query_with_offset_10(user):
         offset=10,
     )
 
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     assert len(response.json()["data"]["events"]["items"]) == 90
     assert response.json()["data"]["events"]["count"] == 100
     assert response.json()["data"]["events"]["hasNext"] is False
@@ -205,7 +206,7 @@ async def test_list_query_with_offset_110(user):
         offset=110,
     )
 
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     assert len(response.json()["data"]["events"]["items"]) == 0
     assert response.json()["data"]["events"]["count"] == 100
     assert response.json()["data"]["events"]["hasNext"] is False
@@ -253,7 +254,7 @@ async def test_list_query_from_the_middle(user):
         limit=10,
     )
 
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     assert len(response.json()["data"]["events"]["items"]) == 10
     assert response.json()["data"]["events"]["count"] == 100
     assert response.json()["data"]["events"]["hasNext"] is True
@@ -279,7 +280,7 @@ async def test_list_query_from_the_end(user):
         limit=10,
     )
 
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     assert len(response.json()["data"]["events"]["items"]) == 5
     assert response.json()["data"]["events"]["count"] == 100
     assert response.json()["data"]["events"]["hasNext"] is False
@@ -311,7 +312,7 @@ async def test_search(user, address):
         search=address,
     )
 
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     assert len(response.json()["data"]["events"]["items"]) == 10
     assert response.json()["data"]["events"]["count"] == 10
     assert response.json()["data"]["events"]["hasNext"] is False
@@ -343,7 +344,7 @@ async def test_search_with_undexsisting_address(user, address):
         search=address,
     )
 
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     assert len(response.json()["data"]["events"]["items"]) == 0
     assert response.json()["data"]["events"]["count"] == 0
     assert response.json()["data"]["events"]["hasNext"] is False
@@ -365,6 +366,6 @@ async def test_sort(user):
         creadentials=user,
     )
 
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     items = [itm["address"] for itm in response.json()["data"]["events"]["items"]]
     assert ["Nagakute", "Inazawa", "Iwakura"] == items

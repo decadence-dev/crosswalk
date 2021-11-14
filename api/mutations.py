@@ -5,6 +5,7 @@ import graphene
 from graphene import relay
 from graphql_relay import from_global_id
 
+from models import Event as EventModel
 from queries import Event, SchemaEventType
 from tasks import send_event_created
 
@@ -18,41 +19,40 @@ def get_event_from_document(doc):
     )
 
 
-class CreateEventMutation(relay.ClientIDMutation):
-    class Input:
-        event_type = graphene.Field(type=SchemaEventType, required=True)
-        description = graphene.String()
+class CreateEventInput(graphene.InputObjectType):
+    event_type = graphene.Field(type=SchemaEventType, required=True)
+    description = graphene.String()
 
-        address = graphene.String(required=True)
-        longitude = graphene.Float(required=True)
-        latitude = graphene.Float(required=True)
+    address = graphene.String(required=True)
+    longitude = graphene.Float(required=True)
+    latitude = graphene.Float(required=True)
+
+
+class CreateEventMutation(graphene.Mutation):
+    class Arguments:
+        data = CreateEventInput(required=True)
 
     Output = Event
 
     @staticmethod
-    async def mutate_and_get_payload(root, info, **input):
-        current_date = datetime.now()
+    async def mutate(root, info, data):
         credentials = info.context["credentials"]
-        if not input["address"]:
-            raise Exception("Address value cannot be empty string")
-        doc = {
-            "id": uuid.uuid4(),
-            "event_type": input["event_type"],
-            "description": input.get("description"),
-            "address": input["address"],
-            "location": {
+        event = EventModel(
+            created_by=credentials,
+            location={
                 "type": "Point",
-                "coordinates": [input["longitude"], input["latitude"]],
+                "coordinates": [data["longitude"], data["latitude"]],
             },
-            "created_by": credentials,
-            "created_date": current_date,
-            "changed_date": current_date,
-        }
+            **data,
+        )
+
         collection = info.context["db"].events
-        await collection.insert_one(doc.copy())
+        await collection.insert_one(event.dict())
         background = info.context["background"]
-        background.add_task(send_event_created, info.context["producer"], doc)
-        return get_event_from_document(doc)
+        background.add_task(
+            send_event_created, info.context["producer"], event.dict(by_alias=True)
+        )
+        return event
 
 
 class UpdateEventMutation(relay.ClientIDMutation):
