@@ -114,38 +114,6 @@ async def events_with_sprcific_address(db, faker, user, event_address):
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures("db", "user", "event_global_id", "event")
-@pytest.mark.parametrize(
-    "input,result",
-    [
-        (
-            {"address": "Updated event"},
-            {"data": {"updateEvent": {"address": "Updated event"}}},
-        )
-    ],
-)
-async def test_update(db, user, event_global_id, input, result):
-    response = await graphql(
-        """
-        mutation updateEvent($id: ID!, $address: String) {
-            updateEvent (input: {id: $id, address: $address}) {
-                address
-            }
-        }
-        """,
-        creadentials=user,
-        id=event_global_id,
-        **input,
-    )
-
-    assert response.status_code == 200
-    assert response.json() == result
-
-    doc = await db.events.find_one({}, {"_id": 0, "events": 1, "address": 1})
-    assert doc["address"] == "Updated event"
-
-
-@pytest.mark.asyncio
 @pytest.mark.usefixtures("db", "user", "event_address", "event_global_id", "event")
 async def test_delete(db, user, event_address, event_global_id):
     response = await graphql(

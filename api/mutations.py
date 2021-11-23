@@ -7,7 +7,7 @@ from graphql_relay import from_global_id
 
 from models import Event as EventModel
 from queries import Event, SchemaEventType
-from tasks import send_event_created
+from tasks import send_event_created, send_event_updated
 
 
 def get_event_from_document(doc):
@@ -40,7 +40,6 @@ class CreateEventMutation(graphene.Mutation):
         event = EventModel(
             created_by=credentials,
             location={
-                "type": "Point",
                 "coordinates": [data["longitude"], data["latitude"]],
             },
             **data,
@@ -55,39 +54,49 @@ class CreateEventMutation(graphene.Mutation):
         return event
 
 
-class UpdateEventMutation(relay.ClientIDMutation):
-    class Input:
-        id = graphene.ID(required=True)
-        event_type = graphene.Field(type=SchemaEventType)
-        description = graphene.String()
+class UpdateEventInput(graphene.InputObjectType):
+    event_type = graphene.Field(type=SchemaEventType)
+    description = graphene.String()
 
-        address = graphene.String()
-        longitude = graphene.Float()
-        latitude = graphene.Float()
+    address = graphene.String()
+    longitude = graphene.Float()
+    latitude = graphene.Float()
+
+
+class UpdateEventMutation(graphene.Mutation):
+    class Arguments:
+        id = graphene.UUID(required=True)
+        data = UpdateEventInput(required=True)
 
     Output = Event
 
     @staticmethod
-    async def mutate_and_get_payload(root, info, **input):
-        type, _id = from_global_id(input["id"])
+    async def mutate(root, info, id, data):
         collection = info.context["db"].events
-
-        if doc := await collection.find_one({"id": uuid.UUID(_id)}, {"_id": 0}):
-            updated_document = dict(
+        if doc := await collection.find_one({"id": id}):
+            doc.update(data)
+            location = doc["location"]
+            update_data = dict(
                 doc,
-                **{
-                    key: input[key]
-                    for key in doc.keys()
-                    if input.get(key) and key != "id"
-                },
                 changed_date=datetime.now(),
+                location={
+                    "coordinates": [
+                        data.get("longitude", location["coordinates"][0]),
+                        data.get("latitude", location["coordinates"][1]),
+                    ],
+                },
             )
-            await collection.update_one(
-                {"id": uuid.UUID(_id)}, {"$set": updated_document.copy()}
+            updated_event = EventModel(**update_data)
+            await collection.update_one({"id": id}, {"$set": updated_event.dict()})
+            background = info.context["background"]
+            background.add_task(
+                send_event_updated,
+                info.context["producer"],
+                updated_event.dict(by_alias=True),
             )
-            return get_event_from_document(updated_document)
+            return updated_event
 
-        raise Exception(f"Event with id {_id} is not exist.")
+        raise Exception(f"Event with id {id} is not exist.")
 
 
 class DeleteEventMutation(relay.ClientIDMutation):

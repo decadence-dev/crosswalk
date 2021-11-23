@@ -2,7 +2,6 @@ import re
 
 import graphene
 import pytz
-from graphene import relay
 
 from models import Event as EventModel
 from models import EventType
@@ -17,9 +16,7 @@ class User(graphene.ObjectType):
 
 
 class Event(graphene.ObjectType):
-    class Meta:
-        interfaces = (relay.Node,)
-
+    id = graphene.UUID()
     event_type = graphene.Field(type=SchemaEventType)
     description = graphene.String()
 
@@ -32,20 +29,20 @@ class Event(graphene.ObjectType):
     changed_date = graphene.DateTime()
 
     @staticmethod
-    async def resolve_created_date(root, info, **kwargs):
+    async def resolve_created_date(parent, info, **kwargs):
         timezone = pytz.timezone(info.context["timezone"])
         return (
-            root.created_date.astimezone(timezone)
-            if root.created_date is not None
+            parent.created_date.astimezone(timezone)
+            if parent.created_date is not None
             else None
         )
 
     @staticmethod
-    async def resolve_changed_date(root, info, **kwargs):
+    async def resolve_changed_date(parent, info, **kwargs):
         timezone = pytz.timezone(info.context["timezone"])
         return (
-            root.changed_date.astimezone(timezone)
-            if root.changed_date is not None
+            parent.changed_date.astimezone(timezone)
+            if parent.changed_date is not None
             else None
         )
 
@@ -66,13 +63,13 @@ class Query(graphene.ObjectType):
     )
 
     @staticmethod
-    async def resolve_event(root, info, id):
+    async def resolve_event(parent, info, id):
         collection = info.context["db"].events
         doc = await collection.find_one({"id": id})
         return EventModel(**doc)
 
     @staticmethod
-    async def resolve_events(root, info, **kwargs):
+    async def resolve_events(parent, info, **kwargs):
         # Creating filter for documents counting
         query = {}
         if search := kwargs.get("search"):

@@ -44,7 +44,7 @@ class PreparedEvent(Event):
         (
             {
                 "eventType": EventType.ROBBERY.name,
-                "address": "2530 Daniel Islands Apt. 802\nPort Angelaton, NV 21553",
+                "address": "2530 Daniel Islands Apt. 802 Port Angelaton, NV 21553",
                 "description": (
                     "True situation song friend act economic fire. "
                     "Direction notice film happy open month recent."
@@ -57,7 +57,7 @@ class PreparedEvent(Event):
                 "data": {
                     "createEvent": {
                         "eventType": "ROBBERY",
-                        "address": "2530 Daniel Islands Apt. 802\nPort Angelaton, NV 21553",  # noqa: E501
+                        "address": "2530 Daniel Islands Apt. 802 Port Angelaton, NV 21553",  # noqa: E501
                         "description": (
                             "True situation song friend act economic fire. "
                             "Direction notice film happy open month recent."
@@ -100,9 +100,11 @@ async def test_create(user, input, result):
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures("db", "user")
-@pytest.mark.parametrize("address", [None, fake.address()])
-@pytest.mark.parametrize("latitude", [None, float(fake.coordinate())])
-@pytest.mark.parametrize("longitude", [None, float(fake.coordinate())])
+@pytest.mark.parametrize(
+    "address", [None, "59427 Hernandez Square Suite 835\nWest Nicoleville, HI 29447"]
+)
+@pytest.mark.parametrize("latitude", [None, -138.437396])
+@pytest.mark.parametrize("longitude", [None, 90.675089])
 @pytest.mark.parametrize("event_type", [None, EventType.ROBBERY.name])
 async def test_create_with_required_fields_empty(
     user, address, latitude, longitude, event_type
@@ -144,7 +146,7 @@ async def test_create_with_required_fields_empty(
         (
             {
                 "eventType": EventType.ROBBERY.name,
-                "address": "2530 Daniel Islands Apt. 802\nPort Angelaton, NV 21553",
+                "address": "2530 Daniel Islands Apt. 802 Port Angelaton, NV 21553",
                 "description": (
                     "True situation song friend act economic fire. "
                     "Direction notice film happy open month recent."
@@ -160,7 +162,7 @@ async def test_create_with_required_fields_empty(
                     "Direction notice film happy open month recent."
                     "Word painting social expect. Well who where a open could day."
                 ),
-                "address": "2530 Daniel Islands Apt. 802\nPort Angelaton, NV 21553",
+                "address": "2530 Daniel Islands Apt. 802 Port Angelaton, NV 21553",
                 "event_type": 1,
                 "location": {"type": "Point", "coordinates": [-150.644803, -15.707780]},
                 "created_by": {
@@ -189,12 +191,11 @@ async def test_created_event_record(db, mocker, user, input, record):
         creadentials=user,
         data=input,
     )
-
     assert response.status_code == status.HTTP_200_OK
+
     event = await db.events.find_one(
         {"id": uuid.UUID("00000000-0000-0000-0000-000000000000")}, {"_id": 0}
     )
-
     assert event == record
 
 
@@ -206,7 +207,7 @@ async def test_created_event_record(db, mocker, user, input, record):
         (
             {
                 "eventType": EventType.ROBBERY.name,
-                "address": "2530 Daniel Islands Apt. 802\nPort Angelaton, NV 21553",
+                "address": "2530 Daniel Islands Apt. 802 Port Angelaton, NV 21553",
                 "description": (
                     "True situation song friend act economic fire. "
                     "Direction notice film happy open month recent."
@@ -225,7 +226,7 @@ async def test_created_event_record(db, mocker, user, input, record):
                         "Direction notice film happy open month recent."
                         "Word painting social expect. Well who where a open could day."  # noqa: E501
                     ),
-                    "address": "2530 Daniel Islands Apt. 802\nPort Angelaton, NV 21553",  # noqa: E501
+                    "address": "2530 Daniel Islands Apt. 802 Port Angelaton, NV 21553",  # noqa: E501
                     "eventType": EventType.ROBBERY.value,
                     "location": {
                         "type": "Point",
