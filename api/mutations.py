@@ -1,13 +1,10 @@
-import uuid
 from datetime import datetime
 
 import graphene
-from graphene import relay
-from graphql_relay import from_global_id
 
 from models import Event as EventModel
 from queries import Event, SchemaEventType
-from tasks import send_event_created, send_event_updated
+from tasks import send_event_created, send_event_updated, send_event_deleted
 
 
 def get_event_from_document(doc):
@@ -99,22 +96,24 @@ class UpdateEventMutation(graphene.Mutation):
         raise Exception(f"Event with id {id} is not exist.")
 
 
-class DeleteEventMutation(relay.ClientIDMutation):
-    class Input:
-        id = graphene.ID(required=True)
+class DeleteEventMutation(graphene.Mutation):
+    class Arguments:
+        id = graphene.UUID(required=True)
 
     Output = Event
 
     @staticmethod
-    async def mutate_and_get_payload(root, info, **input):
-        type, _id = from_global_id(input["id"])
+    async def mutate(root, info, id):
         collection = info.context["db"].events
 
-        if doc := await collection.find_one({"id": uuid.UUID(_id)}, {"_id": 0}):
-            await collection.delete_one({"id": uuid.UUID(_id)})
-            return get_event_from_document(doc)
+        if doc := await collection.find_one({"id": id}, {"_id": 0}):
+            await collection.delete_one({"id": id})
+            event = EventModel(**doc)
+            background = info.context["background"]
+            background.add_task(send_event_deleted, info.context["producer"], event.id)
+            return event
 
-        raise Exception(f"Event with id {_id} is not exist.")
+        raise Exception(f"Event with id {id} is not exist.")
 
 
 class Mutation(graphene.ObjectType):

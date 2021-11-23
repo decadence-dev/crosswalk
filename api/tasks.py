@@ -24,3 +24,13 @@ async def send_event_updated(producer, event):
         )
     except Exception as err:
         print(err)
+
+
+async def send_event_deleted(producer, id):
+    try:
+        event_action = EventAction(id=id, action_type=EventActionType.DELETE)
+        await producer.send_and_wait(
+            settings.actions_topic, event_action.json(exclude={'data': ...}, by_alias=True).encode()
+        )
+    except Exception as err:
+        print(err)

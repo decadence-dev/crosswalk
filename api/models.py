@@ -63,4 +63,4 @@ class EventActionType(IntEnum):
 class EventAction(CamelCasedModel):
     id: uuid.UUID
     action_type: EventActionType
-    data: Event
+    data: Optional[Event]
