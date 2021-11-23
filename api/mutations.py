@@ -4,7 +4,7 @@ import graphene
 
 from models import Event as EventModel
 from queries import Event, SchemaEventType
-from tasks import send_event_created, send_event_updated, send_event_deleted
+from tasks import send_event_created, send_event_deleted, send_event_updated
 
 
 def get_event_from_document(doc):
