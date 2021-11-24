@@ -1,4 +1,4 @@
-from datetime import datetime
+import uuid
 
 import pytest
 from starlette import status
@@ -7,7 +7,7 @@ from tests.utils import graphql
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures("mocker", "user", "event")
+@pytest.mark.usefixtures("user", "event")
 @pytest.mark.parametrize(
     "result",
     [
@@ -34,10 +34,7 @@ from tests.utils import graphql
         },
     ],
 )
-async def test_update(mocker, user, event, result):
-    dt_patch = mocker.patch("mutations.datetime", mocker.Mock(wraps=datetime))
-    dt_patch.now.return_value = datetime(1234, 5, 6)
-
+async def test_delete(user, event, result):
     response = await graphql(
         """
         mutation deleteEvent($id: UUID!) {
@@ -66,11 +63,11 @@ async def test_update(mocker, user, event, result):
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures("user", "event")
-async def test_update_non_nonexistent_event(user):
+async def test_delete_non_nonexistent_event(user):
     response = await graphql(
         """
         mutation deleteEvent($id: UUID!) {
-            deleteEvent (id: $id, data: $data) {
+            deleteEvent (id: $id) {
                 id
                 address
                 description
@@ -90,3 +87,25 @@ async def test_update_non_nonexistent_event(user):
     )
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures("db", "user", "event")
+async def test_delete_record(db, user, event):
+    await graphql(
+        """
+        mutation deleteEvent($id: UUID!) {
+            deleteEvent (id: $id) {
+                id
+            }
+        }
+        """,
+        creadentials=user,
+        id=str(event.id),
+    )
+
+    event = await db.events.find_one(
+        {"id": uuid.UUID("00000000-0000-0000-0000-000000000000")}, {"_id": 0}
+    )
+
+    assert event is None
