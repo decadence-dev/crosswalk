@@ -36,9 +36,10 @@ class Location(pydantic.BaseModel):
 
 class Event(CamelCasedModel):
     id: Optional[uuid.UUID] = pydantic.Field(default_factory=uuid.uuid4)
-    description: Optional[str] = ""
-    address: str = pydantic.Field(...)
     event_type: EventType = pydantic.Field(...)
+    description: Optional[str] = ""
+
+    address: str = pydantic.Field(...)
     location: Location = pydantic.Field(...)
 
     created_by: User = pydantic.Field(...)
@@ -54,13 +55,40 @@ class Event(CamelCasedModel):
         return self.location.coordinates[1]
 
 
-class EventActionType(IntEnum):
-    CREATE = 1
-    UPDATE = 2
-    DELETE = 3
+class PresenceMessage(CamelCasedModel):
+    token: str = pydantic.Field(...)
+    timezone: str = pydantic.Field(default="UTC")
+
+
+class EventActionStatus(IntEnum):
+    CREATED = 1
+    UPDATED = 2
+    DELETED = 3
+    UNAUTHORIZED = 4
+    ERROR = 5
+
+
+class EventActionEvent(pydantic.BaseModel):
+    id: uuid.UUID = pydantic.Field(...)
+    event_type: EventType = pydantic.Field(...)
+    description: Optional[str]
+
+    address: str = pydantic.Field(...)
+    longitude: float = pydantic.Field(...)
+    latitude: float = pydantic.Field(...)
+
+    created_by: User = pydantic.Field(...)
+    created_date: datetime = pydantic.Field(...)
+    changed_date: datetime = pydantic.Field(...)
+
+    class Config:
+        orm_mode = True
+        alias_generator = to_camel_case
+        allow_population_by_field_name = True
 
 
 class EventAction(CamelCasedModel):
-    id: uuid.UUID
-    action_type: EventActionType
-    data: Optional[Event]
+    status: EventActionStatus = pydantic.Field(...)
+    id: Optional[uuid.UUID]
+    event: Optional[EventActionEvent]
+    error: Optional[str]

@@ -1,11 +1,11 @@
 import re
 
 import graphene
-import pytz
 
 from models import Event as EventModel
 from models import EventType
 from settings import settings
+from utils import astimezone
 
 SchemaEventType = graphene.Enum.from_enum(EventType)
 
@@ -30,21 +30,11 @@ class Event(graphene.ObjectType):
 
     @staticmethod
     async def resolve_created_date(parent, info, **kwargs):
-        timezone = pytz.timezone(info.context["timezone"])
-        return (
-            parent.created_date.astimezone(timezone)
-            if parent.created_date is not None
-            else None
-        )
+        return astimezone(parent.created_date, info.context["timezone"])
 
     @staticmethod
     async def resolve_changed_date(parent, info, **kwargs):
-        timezone = pytz.timezone(info.context["timezone"])
-        return (
-            parent.changed_date.astimezone(timezone)
-            if parent.changed_date is not None
-            else None
-        )
+        return astimezone(parent.changed_date, info.context["timezone"])
 
 
 class EventsCollection(graphene.ObjectType):

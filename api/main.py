@@ -1,9 +1,9 @@
-import json
+import pickle
 from datetime import datetime, timedelta
 
 import graphene
 from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
-from fastapi import Cookie, Depends, FastAPI, HTTPException
+from fastapi import Cookie, Depends, FastAPI, HTTPException, WebSocket
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
@@ -11,11 +11,12 @@ from starlette import status
 from starlette.graphql import AsyncioExecutor, GraphQLApp
 from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
-from starlette.websockets import WebSocket
 
+from models import EventAction, EventActionStatus, PresenceMessage
 from mutations import Mutation
 from queries import Query
 from settings import settings
+from utils import astimezone
 
 app = FastAPI()
 
@@ -142,13 +143,53 @@ async def get_token():
 async def events_statuses_sender(
     websocket: WebSocket, consumer: AIOKafkaConsumer = Depends(get_consumer)
 ):
-    # TODO add "token" query paramenter and jwt check
     await websocket.accept()
-    if not settings.test:
-        async for msg in consumer:
-            # TODO add timezone for createdDate and changedDate before send
-            await websocket.send_json(json.loads(msg.value))
-    else:
-        msg = await consumer.getone()
-        await websocket.send_json(json.loads(msg.value))
-    await websocket.close()
+
+    try:
+        while True:
+            data = await websocket.receive_json()
+            presence_msg = PresenceMessage(**data)
+            payload = jwt.decode(
+                presence_msg.token, settings.secret_key, algorithms=["HS256"]
+            )
+            assert datetime.fromtimestamp(payload["exp"]) > datetime.now()
+
+            msg = await consumer.getone()
+            event_action = pickle.loads(msg.value)
+            if event := event_action.event:
+                event.created_date = astimezone(
+                    event.created_date, presence_msg.timezone
+                )
+                event.changed_date = astimezone(
+                    event.changed_date, presence_msg.timezone
+                )
+
+            await websocket.send(
+                {"type": "websocket.send", "text": event_action.json(by_alias=True)}
+            )
+
+            if settings.test:
+                break
+    except AssertionError:
+        event_action = EventAction(
+            status=EventActionStatus.UNAUTHORIZED, error="Token is expired"
+        )
+        await websocket.send(
+            {"type": "websocket.send", "text": event_action.json(by_alias=True)}
+        )
+    except JWTError as err:
+        event_action = EventAction(
+            status=EventActionStatus.UNAUTHORIZED, error=str(err)
+        )
+        await websocket.send(
+            {"type": "websocket.send", "text": event_action.json(by_alias=True)}
+        )
+    except Exception:
+        event_action = EventAction(
+            status=EventActionStatus.ERROR, error="Internal server error"
+        )
+        await websocket.send(
+            {"type": "websocket.send", "text": event_action.json(by_alias=True)}
+        )
+    finally:
+        await websocket.close()

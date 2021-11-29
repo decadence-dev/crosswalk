@@ -1,3 +1,4 @@
+import pickle
 from datetime import datetime
 
 import graphene
@@ -37,7 +38,7 @@ class CreateEventMutation(graphene.Mutation):
         await collection.insert_one(event.dict())
         background = info.context["background"]
         background.add_task(
-            send_event_created, info.context["producer"], event.dict(by_alias=True)
+            send_event_created, info.context["producer"], pickle.dumps(event)
         )
         return event
 

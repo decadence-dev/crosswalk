@@ -1,11 +1,10 @@
 import uuid
-from datetime import datetime
 
 import pytest
 from starlette import status
 
 from models import EventType
-from tests.utils import graphql
+from tests.utils import dictseq, graphql
 
 
 @pytest.mark.asyncio
@@ -111,7 +110,7 @@ async def test_create_with_required_fields_empty(
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures("db", "mocker", "event_mock", "user")
+@pytest.mark.usefixtures("db", "user")
 @pytest.mark.parametrize(
     "input,record",
     [
@@ -128,28 +127,26 @@ async def test_create_with_required_fields_empty(
                 "latitude": -15.707780,
             },
             {
-                "id": uuid.UUID("00000000-0000-0000-0000-000000000000"),
+                "id": ...,
+                "event_type": 1,
                 "description": (
                     "True situation song friend act economic fire. "
                     "Direction notice film happy open month recent."
                     "Word painting social expect. Well who where a open could day."
                 ),
                 "address": "2530 Daniel Islands Apt. 802 Port Angelaton, NV 21553",
-                "event_type": 1,
                 "location": {"type": "Point", "coordinates": [-150.644803, -15.707780]},
                 "created_by": {
                     "id": uuid.UUID("00000000-0000-0000-0000-000000000000"),
                     "username": "mockuser",
                 },
-                "created_date": datetime(1234, 5, 6),
-                "changed_date": datetime(1234, 5, 6),
+                "created_date": ...,
+                "changed_date": ...,
             },
         )
     ],
 )
-async def test_created_event_record(db, mocker, user, event_mock, input, record):
-    mocker.patch("mutations.EventModel", mocker.Mock(wraps=event_mock))
-
+async def test_created_event_record(db, user, input, record):
     response = await graphql(
         """
         mutation createEvent(
@@ -164,8 +161,5 @@ async def test_created_event_record(db, mocker, user, event_mock, input, record)
         data=input,
     )
     assert response.status_code == status.HTTP_200_OK
-
-    event = await db.events.find_one(
-        {"id": uuid.UUID("00000000-0000-0000-0000-000000000000")}, {"_id": 0}
-    )
-    assert event == record
+    event = await db.events.find_one({}, {"_id": 0})
+    assert dictseq(event, record)
