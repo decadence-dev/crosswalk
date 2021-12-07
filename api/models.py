@@ -70,6 +70,7 @@ class EventActionStatus(IntEnum):
 
 class EventActionEvent(pydantic.BaseModel):
     id: uuid.UUID = pydantic.Field(...)
+    # TODO try to serialize int enum as text enum
     event_type: EventType = pydantic.Field(...)
     description: Optional[str]
 

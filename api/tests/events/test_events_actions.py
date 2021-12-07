@@ -11,7 +11,7 @@ from tests.utils import creadentials_to_token, dictseq, graphql
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures("db", "mocker", "user")
+@pytest.mark.usefixtures("db", "user")
 @pytest.mark.parametrize(
     "input,result",
     [
@@ -48,25 +48,16 @@ from tests.utils import creadentials_to_token, dictseq, graphql
                     "createdDate": ...,
                     "changedDate": ...,
                 },
-                "error": ...,
+                "error": None,
             },
         )
     ],
 )
-async def test_receive_create_action(mocker, user, input, result):
-    mocker.patch(
-        "uuid.uuid4", return_value=uuid.UUID("00000000-0000-0000-0000-000000000000")
-    )
-    mocker.patch("mutations.EventModel", mocker.Mock(wraps=Event))
+async def test_receive_create_action(user, input, result):
     client = TestClient(app)
     with client.websocket_connect("/events-actions") as websocket:
         token = creadentials_to_token(user)
         websocket.send_json({"token": token})
-
-        mocker.patch("main.astimezone", return_value=datetime(1234, 5, 6))
-        mocker.patch(
-            "uuid.uuid4", return_value=uuid.UUID("00000000-0000-0000-0000-000000000000")
-        )
 
         response = await graphql(
             """
@@ -105,28 +96,27 @@ async def test_receive_create_action(mocker, user, input, result):
                 "latitude": -30.050664,
             },
             {
+                "status": EventActionStatus.UPDATED.value,
                 "id": "00000000-0000-0000-0000-000000000000",
-                "actionType": EventActionStatus.UPDATED.value,
-                "data": {
+                "event": {
                     "id": "00000000-0000-0000-0000-000000000000",
+                    "eventType": EventType.FIRE.value,
                     "description": (
                         "Establish candidate cause although interest."
                         "Citizen face nor tough behavior. Need feeling happy within."
                         "Special serve stage pressure result where population."
                     ),
                     "address": "40187 Angela Cliffs Apt. 378 North Heatherland, WY 07538",  # noqa: E501
-                    "eventType": EventType.FIRE.value,
-                    "location": {
-                        "type": "Point",
-                        "coordinates": [-9.203746, -30.050664],
-                    },
+                    "longitude": -9.203746,
+                    "latitude": -30.050664,
                     "createdBy": {
                         "id": "00000000-0000-0000-0000-000000000000",
                         "username": "mockuser",
                     },
-                    "createdDate": "1111-01-01T00:00:00",
-                    "changedDate": "1234-05-06T00:00:00",
+                    "createdDate": "1111-01-01T00:00:00+00:00",
+                    "changedDate": "1234-05-06T00:00:00+00:00",
                 },
+                "error": None
             },
         )
     ],
@@ -136,6 +126,9 @@ async def test_receive_update_action(mocker, user, event, input, result):
     dt_patch = mocker.patch("mutations.datetime", mocker.Mock(wraps=datetime))
     dt_patch.now.return_value = datetime(1234, 5, 6)
     with client.websocket_connect("/events-actions") as websocket:
+        token = creadentials_to_token(user)
+        websocket.send_json({"token": token})
+
         response = await graphql(
             """
             mutation updateEvent(
@@ -162,14 +155,19 @@ async def test_receive_update_action(mocker, user, event, input, result):
     "result",
     [
         {
+            "status": EventActionStatus.DELETED.value,
             "id": "00000000-0000-0000-0000-000000000000",
-            "actionType": EventActionStatus.DELETED.value,
+            "event": None,
+            "error": None
         }
     ],
 )
 async def test_receive_delete_action(user, event, result):
     client = TestClient(app)
     with client.websocket_connect("/events-actions") as websocket:
+        token = creadentials_to_token(user)
+        websocket.send_json({"token": token})
+
         response = await graphql(
             """
             mutation deleteEvent($id: UUID!) {

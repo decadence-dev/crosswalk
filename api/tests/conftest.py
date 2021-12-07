@@ -37,33 +37,6 @@ async def event(db, faker, user):
 
 
 @pytest.fixture
-async def event_mock():
-    class MockedEvent(Event):
-        """
-        Event mock object
-
-        For id, created_date, changed_date fields event we have set default_factory,
-        which makes for us imposible patch of datetime and uuid modules,
-        because of default_factory works on metaclass layer
-        and at the moment we are using Event model in mutation,
-        model patch just will not have any effect for already defined fields values.
-
-        To resolve this issue we've created PreparedEvent model,
-        which allow us to set values of id, created_date and changed_date explicitly.
-        """
-
-        def __init__(self, **kwargs):
-            super().__init__(
-                id=uuid.UUID("00000000-0000-0000-0000-000000000000"),
-                created_date=datetime(1234, 5, 6),
-                changed_date=datetime(1234, 5, 6),
-                **kwargs
-            )
-
-    return MockedEvent
-
-
-@pytest.fixture
 async def db():
     client = AsyncIOMotorClient(
         settings.database_host, settings.database_port, uuidRepresentation="standard"

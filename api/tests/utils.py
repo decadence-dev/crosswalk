@@ -34,7 +34,7 @@ def dictseq(a: Dict, b: Dict) -> bool:
     for val_a, val_b in zip(a.values(), b.values()):
         if val_a is Ellipsis or val_b is Ellipsis:
             continue
-        elif type(val_b) != type(val_b):
+        elif type(val_a) != type(val_b):
             return False
         elif isinstance(val_a, dict):
             is_equal = dictseq(val_a, val_b)

@@ -79,9 +79,7 @@ class UpdateEventMutation(graphene.Mutation):
             await collection.update_one({"id": id}, {"$set": updated_event.dict()})
             background = info.context["background"]
             background.add_task(
-                send_event_updated,
-                info.context["producer"],
-                updated_event.dict(by_alias=True),
+                send_event_updated, info.context["producer"], pickle.dumps(updated_event)
             )
             return updated_event
 
