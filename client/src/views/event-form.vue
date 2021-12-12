@@ -27,10 +27,10 @@ export default {
       this.validateRequired('address');
       this.validateRequired('eventType');
       if (!this.hasErrors) {
-        const actionType = this.$route.params.id != null ? 'updateEvent' : 'createEvent';
+        const actionType = this.$route.params.id != null ? 'UPDATE_EVENT' : 'CREATE_EVENT';
         this.$store.dispatch(actionType);
       } else {
-        this.$store.dispatch('updateErrors', ['Please resolve form errors before submit']);
+        this.$store.dispatch('UPDATE_ERRORS', ['Please resolve form errors before submit']);
       }
     },
     getEvent() {

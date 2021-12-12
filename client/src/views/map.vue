@@ -50,7 +50,7 @@ export default {
         });
     },
     resolveError(errorkey) {
-      this.$store.dispatch('resolveErrors', [errorkey]);
+      this.$store.dispatch('RESOLVE_ERRORS', [errorkey]);
     },
   },
   mounted() {

@@ -71,6 +71,7 @@ class Query(graphene.ObjectType):
         pipelines = [{"$match": {key: value}} for key, value in query.items()]
 
         # Updating pipelines with limit, offset and sort aggregations
+        pipelines.append({"$sort": {"changed_date": -1}})
         if offset := kwargs.get("offset"):
             if offset < 0:
                 raise ValueError("Offset cannot be negative")
@@ -80,7 +81,6 @@ class Query(graphene.ObjectType):
             if limit < 0:
                 raise ValueError("Limit cannot be negative")
             pipelines.append({"$limit": limit})
-        pipelines.append({"$sort": {"changed_date": -1}})
 
         collection = info.context["db"].events
         count = await collection.count_documents(query)

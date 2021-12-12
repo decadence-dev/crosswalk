@@ -62,7 +62,7 @@ const EVENT_CREATE_MUTATION = gql`
     $description: String
   ) {
     createEvent (
-      input: { 
+      data: { 
         eventType: $eventType, 
         address: $address, 
         longitude: $longitude, 
@@ -84,7 +84,7 @@ const EVENT_CREATE_MUTATION = gql`
 
 const EVENT_UPDATE_MUTATION = gql`
   mutation updateEvent(
-    $id: ID!,
+    $id: UUID!,
     $eventType: EventType!, 
     $address: String!, 
     $longitude: Float!, 
@@ -92,8 +92,8 @@ const EVENT_UPDATE_MUTATION = gql`
     $description: String
   ) {
     updateEvent (
-      input: { 
-        id: $id,
+      id: $id,
+      data: {
         eventType: $eventType, 
         address: $address, 
         longitude: $longitude, 
@@ -114,8 +114,8 @@ const EVENT_UPDATE_MUTATION = gql`
 `;
 
 const EVENT_DELETE_MUTATION = gql`
-  mutation deleteEvent($id: ID!) {
-    deleteEvent(input: {id: $id}) {
+  mutation deleteEvent($id: UUID!) {
+    deleteEvent(id: $id) {
       id
     }
   }
@@ -136,20 +136,20 @@ export default {
     SET_EVENT(state, event) {
       state.event = event;
     },
-    updateErrors(state, messages) {
+    UPDATE_ERRORS(state, messages) {
       const errs = messages.map((error) => ({key: uuid4(), message: error}))
       state.globalErrors = [...state.globalErrors, ...errs]
     },
-    resolveErrors(state, keys) {
+    RESOLVE_ERRORS(state, keys) {
       state.globalErrors = state.globalErrors.filter((error) => !keys.includes(error.key))
     },
-    insertEvent(state, event) {
+    INSERT_EVENT(state, event) {
       state.events = [...[event], ...state.events]
     },
-    updateeEvent(state, event) {
+    UPDATE_EVENT(state, event) {
       state.events = [...[event], ...state.events.filter((evt) => evt.id !== event.id)]
     },
-    removeEvent(state, id) {
+    REMOVE_EVENT(state, id) {
       state.events = state.events.filter((evt) => evt.id !== id)
     },
     SET_EVENTS(state, data) {
@@ -192,47 +192,43 @@ export default {
       });
       commit('UPDATE_EVENTS_LIST', response.data);
     },
-    async createEvent({ commit, state }) {
+    async CREATE_EVENT({ commit, state }) {
       await client.mutate({
         mutation: EVENT_CREATE_MUTATION,
         variables: { ...state.event, longitude: 0.0, latitude: 0.0 },
       }).then((response) => {
         const event = response.data.createEvent;
-        commit('insertEvent', event);
         router.push({ name: 'detail', params: { id: event.id } });
       }).catch((errors) => {
         const errs = errors.networkError.result.errors.map((error) => (error.message));
-        commit('updateErrors', errs);
+        commit('UPDATE_ERRORS', errs);
       });
     },
-    async updateEvent({ commit, state }) {
+    async UPDATE_EVENT({ commit, state }) {
       await client.mutate({
         mutation: EVENT_UPDATE_MUTATION,
         variables: { ...state.event },
       }).then((response) => {
         const event = response.data.updateEvent;
-        commit('updateeEvent', event);
         router.push({ name: 'detail', params: { id: event.id } });
       }).catch((errors) => {
         const errs = errors.networkError.result.errors.map((error) => (error.message));
-        commit('updateErrors', errs);
+        commit('UPDATE_ERRORS', errs);
       });
     },
-    async deleteEvent({ commit, state }) {
+    async DELETE_EVENT({ state }) {
       await client.mutate({
         mutation: EVENT_DELETE_MUTATION,
         variables: { id: state.event.id },
-      }).then((response) => {
-        const { id } = response.data.deleteEvent;
-        commit('removeEvent', id);
+      }).then(() => {
         router.push({ name: 'map' });
       });
     },
-    async updateErrors({ commit }, errors) {
-      commit('updateErrors', errors);
+    async UPDATE_ERRORS({ commit }, errors) {
+      commit('UPDATE_ERRORS', errors);
     },
-    async resolveErrors({ commit }, errors) {
-      commit('resolveErrors', errors);
+    async RESOLVE_ERRORS({ commit }, errors) {
+      commit('RESOLVE_ERRORS', errors);
     },
   },
 };

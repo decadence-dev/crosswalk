@@ -49,7 +49,7 @@ export default {
       this.$store.dispatch('GET_EVENT', { id: this.$route.params.id });
     },
     deleteEvent() {
-      this.$store.dispatch('deleteEvent', { id: this.$route.params.id });
+      this.$store.dispatch('DELETE_EVENT', { id: this.$route.params.id });
     },
   },
   mounted() {
