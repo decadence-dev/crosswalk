@@ -31,7 +31,7 @@ export default {
       return this.$store.state.events.length !== 0;
     },
     hasNext() {
-      return this.$store.state.hasNextPage;
+      return this.$store.state.hasNext;
     },
     query: {
       get() {
@@ -45,21 +45,11 @@ export default {
   methods: {
     searchSubmit(e) {
       e.preventDefault();
-      this.$store.dispatch(
-        'getEvents',
-        { ...this.query, first: 10 },
-      );
+      this.$store.dispatch('getEvents', this.query);
     },
     fetchMore(e) {
       e.preventDefault();
-      this.$store.dispatch(
-        'fetchMoreEvents',
-        {
-          ...this.query,
-          after: this.$store.state.endCursor,
-          first: 10,
-        },
-      );
+      this.$store.dispatch('FETCH_MORE_EVENTS', this.query);
     },
   },
 };

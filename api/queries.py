@@ -76,6 +76,7 @@ class Query(graphene.ObjectType):
                 raise ValueError("Offset cannot be negative")
             pipelines.append({"$skip": offset})
         if limit := kwargs.get("limit"):
+            # TODO to limit maximum "limit" with global value
             if limit < 0:
                 raise ValueError("Limit cannot be negative")
             pipelines.append({"$limit": limit})

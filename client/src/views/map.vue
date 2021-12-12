@@ -55,7 +55,7 @@ export default {
   },
   mounted() {
     this.login();
-    this.$store.dispatch('getEvents', { first: 10 });
+    this.$store.dispatch('GET_EVENTS');
     document.cookie = `timezone=${Intl.DateTimeFormat().resolvedOptions().timeZone}`;
   },
 };

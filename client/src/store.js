@@ -20,6 +20,8 @@ const client = new ApolloClient({
   cache: new InMemoryCache(),
 });
 
+const EVENTS_LIMIT = 10;
+
 const EVENT_QUERY = gql`
   query getEvent($id: ID!) {
     event(id: $id) {
@@ -38,18 +40,14 @@ const EVENT_QUERY = gql`
 `;
 
 const EVENTS_QUERY = gql`
-  query geteEvents($search: String, $first: Int, $after: String) {
-    events (search: $search, first: $first, after: $after) {
-      pageInfo {
-        endCursor
-        hasNextPage
-      }
-      edges{
-        node {
-          id
-          address
-          eventType
-        }
+  query geteEvents($search: String, $limit: Int, $offset: Int) {
+    events (search: $search, limit: $limit, offset: $offset) {
+      count
+      hasNext
+      items{
+        id
+        address
+        eventType
       }
     }
   }
@@ -126,8 +124,9 @@ const EVENT_DELETE_MUTATION = gql`
 export default {
   state: {
     event: {},
-    hasNextPage: false,
-    endCursor: 0,
+    hasNext: false,
+    count: 0,
+    offset: EVENTS_LIMIT,
     globalErrors: [],
     events: [],
     pageInfo: {},
@@ -153,15 +152,16 @@ export default {
     removeEvent(state, id) {
       state.events = state.events.filter((evt) => evt.id !== id)
     },
-    setEvents(state, data) {
-      state.events = data.events.edges.map((edge) => (edge.node));
-      state.hasNextPage = data.events.pageInfo.hasNextPage;
-      state.endCursor = data.events.pageInfo.endCursor;
+    SET_EVENTS(state, data) {
+      state.events = data.events.items
+      state.hasNext = data.events.hasNext;
+      state.count = data.events.count;
     },
-    updateEvents(state, data) {
-      state.events = [...state.events, ...data.events.edges.map((edge) => (edge.node))];
-      state.hasNextPage = data.events.pageInfo.hasNextPage;
-      state.endCursor = data.events.pageInfo.endCursor;
+    UPDATE_EVENTS_LIST(state, data) {
+      state.offset += EVENTS_LIMIT;
+      state.events = [...state.events, ...data.events.items];
+      state.hasNext = data.events.hasNext;
+      state.count = data.events.count;
     },
     /* eslint-enable */
   },
@@ -173,13 +173,23 @@ export default {
     async resetEvent({ commit }) {
       commit('setEvent', {});
     },
-    async getEvents({ commit }, variables = {}) {
-      const response = await client.query({ query: EVENTS_QUERY, variables });
-      commit('setEvents', response.data);
+    async GET_EVENTS({ commit }, variables = {}) {
+      const response = await client.query({
+        query: EVENTS_QUERY,
+        variables: { limit: EVENTS_LIMIT, ...variables },
+      });
+      commit('SET_EVENTS', response.data);
     },
-    async fetchMoreEvents({ commit }, variables = {}) {
-      const response = await client.query({ query: EVENTS_QUERY, variables });
-      commit('updateEvents', response.data);
+    async FETCH_MORE_EVENTS({ commit, state }, variables = {}) {
+      const response = await client.query({
+        query: EVENTS_QUERY,
+        variables: {
+          limit: EVENTS_LIMIT,
+          offset: state.offset,
+          ...variables,
+        },
+      });
+      commit('UPDATE_EVENTS_LIST', response.data);
     },
     async createEvent({ commit, state }) {
       await client.mutate({
