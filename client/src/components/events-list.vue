@@ -45,7 +45,7 @@ export default {
   methods: {
     searchSubmit(e) {
       e.preventDefault();
-      this.$store.dispatch('getEvents', this.query);
+      this.$store.dispatch('GET_EVENTS', this.query);
     },
     fetchMore(e) {
       e.preventDefault();

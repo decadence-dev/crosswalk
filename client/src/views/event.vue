@@ -46,7 +46,7 @@ export default {
   },
   methods: {
     getEvent() {
-      this.$store.dispatch('getEvent', { id: this.$route.params.id });
+      this.$store.dispatch('GET_EVENT', { id: this.$route.params.id });
     },
     deleteEvent() {
       this.$store.dispatch('deleteEvent', { id: this.$route.params.id });
@@ -203,6 +203,7 @@ export default {
       flex-flow: column;
       border-radius: 8px;
       border: 1px solid $yellow;
+      background-color: $black;
       min-width: 128px;
 
       &::before {

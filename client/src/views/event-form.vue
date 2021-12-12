@@ -35,9 +35,9 @@ export default {
     },
     getEvent() {
       if (this.$route.params.id != null) {
-        this.$store.dispatch('getEvent', { id: this.$route.params.id });
+        this.$store.dispatch('GET_EVENT', { id: this.$route.params.id });
       } else {
-        this.$store.dispatch('resetEvent');
+        this.$store.dispatch('RESET_EVENT');
       }
     },
     validateRequired(name) {

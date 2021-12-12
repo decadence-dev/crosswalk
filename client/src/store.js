@@ -23,7 +23,7 @@ const client = new ApolloClient({
 const EVENTS_LIMIT = 10;
 
 const EVENT_QUERY = gql`
-  query getEvent($id: ID!) {
+  query getEvent($id: UUID!) {
     event(id: $id) {
       id
       eventType
@@ -133,7 +133,7 @@ export default {
   },
   mutations: {
     /* eslint-disable */
-    setEvent(state, event) {
+    SET_EVENT(state, event) {
       state.event = event;
     },
     updateErrors(state, messages) {
@@ -153,6 +153,7 @@ export default {
       state.events = state.events.filter((evt) => evt.id !== id)
     },
     SET_EVENTS(state, data) {
+      state.offset = EVENTS_LIMIT
       state.events = data.events.items
       state.hasNext = data.events.hasNext;
       state.count = data.events.count;
@@ -166,12 +167,12 @@ export default {
     /* eslint-enable */
   },
   actions: {
-    async getEvent({ commit }, variables) {
+    async GET_EVENT({ commit }, variables) {
       const response = await client.query({ query: EVENT_QUERY, variables });
-      commit('setEvent', response.data.event);
+      commit('SET_EVENT', response.data.event);
     },
-    async resetEvent({ commit }) {
-      commit('setEvent', {});
+    async RESET_EVENT({ commit }) {
+      commit('SET_EVENT', {});
     },
     async GET_EVENTS({ commit }, variables = {}) {
       const response = await client.query({
