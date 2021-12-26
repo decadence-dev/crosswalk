@@ -3,11 +3,8 @@ import re
 import graphene
 
 from models import Event as EventModel
-from models import EventType
 from settings import settings
 from utils import astimezone
-
-SchemaEventType = graphene.Enum.from_enum(EventType)
 
 
 class User(graphene.ObjectType):
@@ -17,7 +14,7 @@ class User(graphene.ObjectType):
 
 class Event(graphene.ObjectType):
     id = graphene.UUID()
-    event_type = graphene.Field(type=SchemaEventType)
+    event_type = graphene.List(graphene.String)
     description = graphene.String()
 
     address = graphene.String()
@@ -55,8 +52,9 @@ class Query(graphene.ObjectType):
     @staticmethod
     async def resolve_event(parent, info, id):
         collection = info.context["db"].events
-        doc = await collection.find_one({"id": id})
-        return EventModel(**doc)
+        if doc := await collection.find_one({"id": id}):
+            return EventModel(**doc)
+        raise Exception(f"Event with id {id} is not exist.")
 
     @staticmethod
     async def resolve_events(parent, info, **kwargs):

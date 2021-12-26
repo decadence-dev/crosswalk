@@ -5,7 +5,7 @@ import pytest
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from main import settings
-from models import Event, EventType
+from models import Event
 
 
 @pytest.fixture
@@ -19,7 +19,7 @@ async def event(db, faker, user):
     collection = db.events
     instance = Event(
         id=uuid.UUID("00000000-0000-0000-0000-000000000000"),
-        event_type=EventType.ACCEDENT.value,
+        event_type=["Accedent"],
         description=(
             "City point during. Maybe movement few record baby."
             "Interesting use throughout responsibility."
@@ -41,5 +41,5 @@ async def db():
     client = AsyncIOMotorClient(
         settings.database_host, settings.database_port, uuidRepresentation="standard"
     )
-    yield client[settings.database_name if not settings.test else "test"]
+    yield client["test"]
     client.drop_database("test")

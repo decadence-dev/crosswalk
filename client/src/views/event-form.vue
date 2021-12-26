@@ -6,7 +6,7 @@ import EventType from '../components/eventtype.vue';
 import CloseIcon from '../icons/close.vue';
 
 export default {
-  name: 'CreateForm',
+  name: 'EventForm',
   components: {
     Textarea, Input, CloseIcon, EventType, Button,
   },
@@ -41,7 +41,10 @@ export default {
       }
     },
     validateRequired(name) {
-      if (this.$store.state.event[name] == null || this.$store.state.event[name].trim() === '') {
+      const value = this.$store.state.event[name];
+      const isEmptyString = typeof value === 'string' && value.trim();
+      const isEmptyArray = Array.isArray(value) && value.length === 0;
+      if (this.$store.state.event[name] == null || (isEmptyString && isEmptyArray)) {
         this.errors = [...this.errors, ...[name]];
       } else {
         this.errors = this.errors.filter((error) => error !== name);
@@ -94,7 +97,6 @@ export default {
             @blur="validateRequired('eventType', $event.target.value)"
             id="eventType"
             class="field__input"
-            name="eventType"
             v-model="event.eventType"
         ></EventType>
         <small class="field__error">

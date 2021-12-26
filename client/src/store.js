@@ -55,7 +55,7 @@ const EVENTS_QUERY = gql`
 
 const EVENT_CREATE_MUTATION = gql`
   mutation createEvent(
-    $eventType: EventType!, 
+    $eventType: [String]!, 
     $address: String!, 
     $longitude: Float!, 
     $latitude: Float!,
@@ -85,7 +85,7 @@ const EVENT_CREATE_MUTATION = gql`
 const EVENT_UPDATE_MUTATION = gql`
   mutation updateEvent(
     $id: UUID!,
-    $eventType: EventType!, 
+    $eventType: [String]!, 
     $address: String!, 
     $longitude: Float!, 
     $latitude: Float!,
@@ -143,13 +143,13 @@ export default {
     RESOLVE_ERRORS(state, keys) {
       state.globalErrors = state.globalErrors.filter((error) => !keys.includes(error.key))
     },
-    INSERT_EVENT(state, event) {
+    INSERT_EVENT_DATA(state, event) {
       state.events = [...[event], ...state.events]
     },
-    UPDATE_EVENT(state, event) {
+    UPDATE_EVENT_DATA(state, event) {
       state.events = [...[event], ...state.events.filter((evt) => evt.id !== event.id)]
     },
-    REMOVE_EVENT(state, id) {
+    REMOVE_EVENT_DATA(state, id) {
       state.events = state.events.filter((evt) => evt.id !== id)
     },
     SET_EVENTS(state, data) {
@@ -229,6 +229,28 @@ export default {
     },
     async RESOLVE_ERRORS({ commit }, errors) {
       commit('RESOLVE_ERRORS', errors);
+    },
+    async RECEIVE_EVENT_ACTION({ commit }, data) {
+      switch (data.status) {
+        case 1:
+          commit('INSERT_EVENT_DATA', data.event);
+          break;
+        case 2:
+          commit('UPDATE_EVENT_DATA', data.event);
+          break;
+        case 3:
+          commit('REMOVE_EVENT_DATA', data.id);
+          break;
+        case 4:
+          break;
+        case 5:
+          commit('UPDATE_ERRORS', [data.errors]);
+          break;
+        default:
+          /* eslint-disable */
+          console.warn(data);
+          /* eslint-enable */
+      }
     },
   },
 };

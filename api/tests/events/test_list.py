@@ -3,7 +3,7 @@ from datetime import datetime
 import pytest
 from starlette import status
 
-from models import Event, EventType
+from models import Event
 from tests.utils import graphql
 
 
@@ -14,7 +14,7 @@ async def events(db, faker, user):
     result = await collection.insert_many(
         map(
             lambda itm: Event(
-                event_type=faker.random_element(EventType),
+                event_type=["Robbery"],
                 description=faker.text(),
                 address=faker.address(),
                 location={"type": "Point", "coordinates": faker.latlng()},
@@ -36,7 +36,7 @@ async def iwakura_events(db, faker, user):
     result = await collection.insert_many(
         map(
             lambda itm: Event(
-                event_type=faker.random_element(EventType),
+                event_type=["Robbery"],
                 description=faker.text(),
                 address="Iwakura",
                 location={"type": "Point", "coordinates": faker.latlng()},
@@ -56,7 +56,7 @@ async def iwakura_events(db, faker, user):
 async def february_events(db, faker, user):
     docs = [
         {
-            "event_type": faker.random_element(EventType),
+            "event_type": ["Robbery"],
             "description": faker.text(),
             "address": "Iwakura",
             "location": {"type": "Point", "coordinates": faker.latlng()},
@@ -65,7 +65,7 @@ async def february_events(db, faker, user):
             "changed_date": datetime.strptime("01.02.2030", "%d.%m.%Y"),
         },
         {
-            "event_type": faker.random_element(EventType),
+            "event_type": ["Robbery"],
             "description": faker.text(),
             "address": "Inazawa",
             "location": {"type": "Point", "coordinates": faker.latlng()},
@@ -74,7 +74,7 @@ async def february_events(db, faker, user):
             "changed_date": datetime.strptime("16.02.2030", "%d.%m.%Y"),
         },
         {
-            "event_type": faker.random_element(EventType),
+            "event_type": ["Robbery"],
             "description": faker.text(),
             "address": "Nagakute",
             "location": {"type": "Point", "coordinates": faker.latlng()},

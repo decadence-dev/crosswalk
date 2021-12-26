@@ -4,12 +4,12 @@ from datetime import datetime
 import graphene
 
 from models import Event as EventModel
-from queries import Event, SchemaEventType
+from queries import Event
 from tasks import send_event_created, send_event_deleted, send_event_updated
 
 
 class CreateEventInput(graphene.InputObjectType):
-    event_type = graphene.Field(type=SchemaEventType, required=True)
+    event_type = graphene.List(graphene.String, required=True)
     description = graphene.String()
 
     address = graphene.String(required=True)
@@ -37,14 +37,12 @@ class CreateEventMutation(graphene.Mutation):
         collection = info.context["db"].events
         await collection.insert_one(event.dict())
         background = info.context["background"]
-        background.add_task(
-            send_event_created, info.context["producer"], pickle.dumps(event)
-        )
+        background.add_task(send_event_created, pickle.dumps(event))
         return event
 
 
 class UpdateEventInput(graphene.InputObjectType):
-    event_type = graphene.Field(type=SchemaEventType)
+    event_type = graphene.List(graphene.String)
     description = graphene.String()
 
     address = graphene.String()
@@ -79,7 +77,8 @@ class UpdateEventMutation(graphene.Mutation):
             await collection.update_one({"id": id}, {"$set": updated_event.dict()})
             background = info.context["background"]
             background.add_task(
-                send_event_updated, info.context["producer"], pickle.dumps(updated_event)
+                send_event_updated,
+                pickle.dumps(updated_event),
             )
             return updated_event
 
@@ -100,7 +99,7 @@ class DeleteEventMutation(graphene.Mutation):
             await collection.delete_one({"id": id})
             event = EventModel(**doc)
             background = info.context["background"]
-            background.add_task(send_event_deleted, info.context["producer"], event.id)
+            background.add_task(send_event_deleted, event.id)
             return event
 
         raise Exception(f"Event with id {id} is not exist.")

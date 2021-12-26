@@ -18,7 +18,6 @@ services:
       - api
 
   api:
-    container_name: crosswalk_api
     build:
       context: api
     command: poetry run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
@@ -34,11 +33,9 @@ services:
       - kafka
 
   apidb:
-    container_name: crosswalk_apidb
     image: mongo:4.4.5
 
   zookeeper:
-    container_name: crosswalk_zookeeper
     image: wurstmeister/zookeeper
     ports:
       - 2181:2181

@@ -3,7 +3,6 @@ import uuid
 import pytest
 from starlette import status
 
-from models import EventType
 from tests.utils import dictseq, graphql
 
 
@@ -14,7 +13,7 @@ from tests.utils import dictseq, graphql
     [
         (
             {
-                "eventType": EventType.ROBBERY.name,
+                "eventType": ["Robbery"],
                 "address": "2530 Daniel Islands Apt. 802 Port Angelaton, NV 21553",
                 "description": (
                     "True situation song friend act economic fire. "
@@ -27,7 +26,7 @@ from tests.utils import dictseq, graphql
             {
                 "data": {
                     "createEvent": {
-                        "eventType": "ROBBERY",
+                        "eventType": ["Robbery"],
                         "address": "2530 Daniel Islands Apt. 802 Port Angelaton, NV 21553",  # noqa: E501
                         "description": (
                             "True situation song friend act economic fire. "
@@ -76,7 +75,7 @@ async def test_create(user, input, result):
 )
 @pytest.mark.parametrize("latitude", [None, -138.437396])
 @pytest.mark.parametrize("longitude", [None, 90.675089])
-@pytest.mark.parametrize("event_type", [None, EventType.ROBBERY.name])
+@pytest.mark.parametrize("event_type", [None, ["Robbery"]])
 async def test_create_with_required_fields_empty(
     faker, user, address, latitude, longitude, event_type
 ):
@@ -116,7 +115,7 @@ async def test_create_with_required_fields_empty(
     [
         (
             {
-                "eventType": EventType.ROBBERY.name,
+                "eventType": ["Robbery"],
                 "address": "2530 Daniel Islands Apt. 802 Port Angelaton, NV 21553",
                 "description": (
                     "True situation song friend act economic fire. "
@@ -128,7 +127,7 @@ async def test_create_with_required_fields_empty(
             },
             {
                 "id": ...,
-                "event_type": 1,
+                "event_type": ["Robbery"],
                 "description": (
                     "True situation song friend act economic fire. "
                     "Direction notice film happy open month recent."

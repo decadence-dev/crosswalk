@@ -3,30 +3,13 @@ import { mapState } from 'vuex';
 import Input from './input.vue';
 import Button from './button.vue';
 
-const EVENT_TYPE_MAP = {
-  ROBBERY: 'Robbery',
-  FIGHT: 'Fight',
-  DEATH: 'Death',
-  GUN: 'Gun',
-  INADEQUATE: 'Inadequate',
-  ACCEDENT: 'Accedent',
-  FIRE: 'Fire',
-  POLICE: 'Police',
-};
-
 export default {
   name: 'EventsList',
   components: {
     Input, Button,
   },
   computed: {
-    ...mapState({
-      events: (state) => state.events.map(
-        (event) => ({
-          ...event, eventType: EVENT_TYPE_MAP[event.eventType],
-        }),
-      ),
-    }),
+    ...mapState(['events']),
     hasEvents() {
       return this.$store.state.events.length !== 0;
     },
@@ -79,9 +62,9 @@ export default {
         <span class="item__name">
           {{ event.address }}
         </span>
-        <span class="item__address">
-          {{ event.eventType }}
-        </span>
+        <div class="item__address">
+          <span v-bind:key="idx" v-for="(typeName, idx) in event.eventType">{{ typeName }}</span>
+        </div>
         <router-link
             :to="{ name: 'detail', params: { id: event.id }}"
             v-slot="{href, navigate}"

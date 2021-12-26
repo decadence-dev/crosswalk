@@ -2,8 +2,10 @@ import pytest
 import pytz
 from starlette import status
 
-from models import Event, EventType
+from models import Event
 from tests.utils import graphql
+
+# TODO Add tests for event not exist
 
 
 @pytest.fixture
@@ -23,7 +25,7 @@ async def changed_date(faker):
 async def event(db, faker, user, created_date, changed_date):
     collection = db.events
     instance = Event(
-        event_type=faker.random_element(EventType),
+        event_type=["Robbery"],
         description=faker.text(),
         address=faker.address(),
         location={"type": "Point", "coordinates": [0.0, 0.0]},

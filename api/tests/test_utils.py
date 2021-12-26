@@ -20,8 +20,8 @@ def test_different_values():
 
 
 def test_embedded_values():
-    d1 = {'data': {itm: itm for itm in range(10)}}
-    d2 = {'data': {itm: itm - 1 for itm in range(10)}}
+    d1 = {"data": {itm: itm for itm in range(10)}}
+    d2 = {"data": {itm: itm - 1 for itm in range(10)}}
     assert not dictseq(d1, d2)
 
 

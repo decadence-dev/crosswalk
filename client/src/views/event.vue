@@ -5,17 +5,6 @@ import OptionsIcon from '../icons/options.vue';
 import EditIcon from '../icons/edit.vue';
 import TrashIcon from '../icons/trash.vue';
 
-const EVENT_TYPE_MAP = {
-  ROBBERY: 'Robbery',
-  FIGHT: 'Fight',
-  DEATH: 'Death',
-  GUN: 'Gun',
-  INADEQUATE: 'Inadequate',
-  ACCEDENT: 'Accedent',
-  FIRE: 'Fire',
-  POLICE: 'Police',
-};
-
 export default {
   name: 'Event',
   data: () => ({
@@ -25,9 +14,7 @@ export default {
     TrashIcon, EditIcon, CloseIcon, OptionsIcon,
   },
   computed: {
-    ...mapState({
-      event: (state) => ({ ...state.event, eventType: EVENT_TYPE_MAP[state.event.eventType] }),
-    }),
+    ...mapState(['event']),
     publicationDate() {
       const { createdDate } = this.$store.state.event;
       if (createdDate !== undefined) {
@@ -74,7 +61,9 @@ export default {
       <CloseIcon></CloseIcon>
     </div>
     <div class="info">
-      <span class="info__type">{{ event.eventType }}</span>
+      <div class="info__type">
+        <span v-bind:key="idx" v-for="(typeName, idx) in event.eventType">{{ typeName }}</span>
+      </div>
       <span class="info__address">{{ event.address }}</span>
       <div class="publication">
         <span class="publication__author">{{ publicationAuthor }}</span>

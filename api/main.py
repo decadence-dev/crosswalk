@@ -1,9 +1,7 @@
-import pickle
 from datetime import datetime, timedelta
 
 import graphene
-from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
-from fastapi import Cookie, Depends, FastAPI, HTTPException, WebSocket
+from fastapi import Cookie, Depends, FastAPI, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
@@ -12,11 +10,9 @@ from starlette.graphql import AsyncioExecutor, GraphQLApp
 from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 
-from models import EventAction, EventActionStatus, PresenceMessage
 from mutations import Mutation
 from queries import Query
 from settings import settings
-from utils import astimezone
 
 app = FastAPI()
 
@@ -47,22 +43,6 @@ async def get_db():
     client.close()
 
 
-async def get_producer():
-    producer = AIOKafkaProducer(bootstrap_servers=settings.bootstrap_servers)
-    await producer.start()
-    yield producer
-    await producer.stop()
-
-
-async def get_consumer():
-    consumer = AIOKafkaConsumer(
-        settings.actions_topic, bootstrap_servers=settings.bootstrap_servers
-    )
-    await consumer.start()
-    yield consumer
-    await consumer.stop()
-
-
 async def database_middleware(next, root, info, **args):
     if "db" not in info.context:
         info.context["db"] = info.context["request"].db
@@ -74,12 +54,6 @@ async def user_info_middleware(next, root, info, **args):
         info.context["credentials"] = info.context["request"].credentials
     if "timezone" not in info.context:
         info.context["timezone"] = info.context["request"].timezone
-    return next(root, info, **args)
-
-
-async def kafka_middleware(next, root, info, **args):
-    if "producer" not in info.context:
-        info.context["producer"] = info.context["request"].producer
     return next(root, info, **args)
 
 
@@ -105,7 +79,7 @@ app.add_middleware(
 schema = MiddlewareSchema(
     query=Query,
     mutation=Mutation,
-    middleware=[database_middleware, user_info_middleware, kafka_middleware],
+    middleware=[database_middleware, user_info_middleware],
 )
 
 
@@ -118,10 +92,8 @@ async def main(
     timezone: str = Cookie("UTC"),
     credentials: dict = Depends(get_current_user_creadentials),
     db: AsyncIOMotorDatabase = Depends(get_db),
-    producer: AIOKafkaProducer = Depends(get_producer),
 ):
     request.db = db
-    request.producer = producer
     request.timezone = timezone
     request.credentials = credentials
     return await graphql_app.handle_graphql(request)
@@ -137,59 +109,3 @@ async def get_token():
         "exp": datetime.now() + timedelta(minutes=settings.auth_expiration_minutes),
     }
     return jwt.encode(payload, settings.secret_key, algorithm="HS256")
-
-
-@app.websocket("/events-actions")
-async def events_statuses_sender(
-    websocket: WebSocket, consumer: AIOKafkaConsumer = Depends(get_consumer)
-):
-    await websocket.accept()
-
-    try:
-        while True:
-            data = await websocket.receive_json()
-            presence_msg = PresenceMessage(**data)
-            payload = jwt.decode(
-                presence_msg.token, settings.secret_key, algorithms=["HS256"]
-            )
-            assert datetime.fromtimestamp(payload["exp"]) > datetime.now()
-
-            msg = await consumer.getone()
-            event_action = pickle.loads(msg.value)
-            if event := event_action.event:
-                event.created_date = astimezone(
-                    event.created_date, presence_msg.timezone
-                )
-                event.changed_date = astimezone(
-                    event.changed_date, presence_msg.timezone
-                )
-
-            await websocket.send(
-                {"type": "websocket.send", "text": event_action.json(by_alias=True)}
-            )
-
-            if settings.test:
-                break
-    except AssertionError:
-        event_action = EventAction(
-            status=EventActionStatus.UNAUTHORIZED, error="Token is expired"
-        )
-        await websocket.send(
-            {"type": "websocket.send", "text": event_action.json(by_alias=True)}
-        )
-    except JWTError as err:
-        event_action = EventAction(
-            status=EventActionStatus.UNAUTHORIZED, error=str(err)
-        )
-        await websocket.send(
-            {"type": "websocket.send", "text": event_action.json(by_alias=True)}
-        )
-    except Exception:
-        event_action = EventAction(
-            status=EventActionStatus.ERROR, error="Internal server error"
-        )
-        await websocket.send(
-            {"type": "websocket.send", "text": event_action.json(by_alias=True)}
-        )
-    finally:
-        await websocket.close()

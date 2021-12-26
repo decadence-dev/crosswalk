@@ -15,38 +15,34 @@ export default {
     RobberyIcon, FightIcon, DeathIcon, GunrireIcon, InsaneIcon, AccidentIcon, FireIcon, PoliceIcon,
   },
   data: () => ({
-    selectedType: null,
+    selectedTypes: [],
     types: [
-      { name: 'ROBBERY', icon: 'RobberyIcon' },
-      { name: 'FIGHT', icon: 'FightIcon' },
-      { name: 'DEATH', icon: '' },
-      { name: 'GUN', icon: 'GunrireIcon' },
-      { name: 'INADEQUATE', icon: 'InsaneIcon' },
-      { name: 'ACCEDENT', icon: 'AccidentIcon' },
-      { name: 'FIRE', icon: 'FireIcon' },
-      { name: 'POLICE', icon: 'PoliceIcon' },
+      { name: 'Robbery', icon: 'RobberyIcon' },
+      { name: 'Fight', icon: 'FightIcon' },
+      { name: 'Death', icon: '' },
+      { name: 'Gun', icon: 'GunrireIcon' },
+      { name: 'Inadequate', icon: 'InsaneIcon' },
+      { name: 'Accedent', icon: 'AccidentIcon' },
+      { name: 'Fire', icon: 'FireIcon' },
+      { name: 'Police', icon: 'PoliceIcon' },
     ],
   }),
   props: {
-    name: {
-      type: String,
-      required: true,
-    },
-    value: String,
+    value: Array[String],
   },
   computed: {
     selected: {
       get() {
-        return this.selectedType !== null ? this.selectedType : this.value || null;
+        return this.selectedTypes.length > 0 ? this.selectedTypes : this.value || [];
       },
       set(value) {
-        this.selectedType = value;
+        this.selectedType = [value];
       },
     },
   },
   methods: {
     selectType(type) {
-      this.selected = type;
+      this.selected = [type];
       this.$emit('input', type);
     },
   },
@@ -59,7 +55,7 @@ export default {
         class="eventtype__option"
         v-for="(type, idx) in types"
         v-bind:key="idx"
-        v-bind:class="{ 'eventtype__option_selected': type.name === selected }"
+        v-bind:class="{ 'eventtype__option_selected': selected.includes(type.name) }"
         @click="selectType(type.name)"
     >
       <component class="eventtype__option-icon" v-bind:is="type.icon"></component>

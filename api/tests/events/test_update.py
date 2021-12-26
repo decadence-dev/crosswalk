@@ -4,7 +4,6 @@ from datetime import datetime
 import pytest
 from starlette import status
 
-from models import EventType
 from tests.utils import graphql
 
 
@@ -15,7 +14,7 @@ from tests.utils import graphql
     [
         (
             {
-                "eventType": EventType.FIRE.name,
+                "eventType": ["Fire"],
                 "address": "40187 Angela Cliffs Apt. 378 North Heatherland, WY 07538",
                 "description": (
                     "Establish candidate cause although interest."
@@ -88,7 +87,7 @@ async def test_update(mocker, user, event, input, result):
     "input",
     [
         {
-            "eventType": EventType.FIRE.name,
+            "eventType": ["Fire"],
             "address": "40187 Angela Cliffs Apt. 378 North Heatherland, WY 07538",
             "description": (
                 "Establish candidate cause although interest."
@@ -136,7 +135,7 @@ async def test_update_non_nonexistent_event(user, input):
     [
         (
             {
-                "eventType": EventType.FIRE.name,
+                "eventType": ["Fire"],
             },
             {
                 "data": {
@@ -175,7 +174,7 @@ async def test_update_changed_date_updated(mocker, user, event, input, result):
 @pytest.mark.parametrize("address", [None, "89159 Patty Ways\nEast April, NM 44063"])
 @pytest.mark.parametrize("latitude", [None, -153.540373])
 @pytest.mark.parametrize("longitude", [None, 168.172962])
-@pytest.mark.parametrize("event_type", [None, EventType.FIRE.name])
+@pytest.mark.parametrize("event_type", [None, ["Fire"]])
 async def test_update_required_fieds(
     user, event, address, latitude, longitude, event_type
 ):
@@ -214,7 +213,7 @@ async def test_update_required_fieds(
     [
         (
             {
-                "eventType": EventType.FIRE.name,
+                "eventType": ["Fire"],
                 "address": "40187 Angela Cliffs Apt. 378 North Heatherland, WY 07538",
                 "description": (
                     "Establish candidate cause although interest."
@@ -232,7 +231,7 @@ async def test_update_required_fieds(
                     "Special serve stage pressure result where population."
                 ),
                 "address": "40187 Angela Cliffs Apt. 378 North Heatherland, WY 07538",
-                "event_type": 7,
+                "event_type": ["Fire"],
                 "location": {"type": "Point", "coordinates": [-9.203746, -30.050664]},
                 "created_by": {
                     "id": uuid.UUID("00000000-0000-0000-0000-000000000000"),

@@ -2,8 +2,8 @@
 from fabric.api import local
 
 
-def bash(service):
-    local(f"docker-compose exec {service} bash")
+def bash():
+    local(f"docker exec -ti api bash")
 
 
 def run():
