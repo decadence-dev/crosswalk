@@ -6,6 +6,7 @@ import CloseIcon from '../icons/close.vue';
 import DashIcon from '../icons/dash.vue';
 import Navbar from '../components/navbar.vue';
 import EventsList from '../components/events-list.vue';
+import connectEventActions from '../websocket_handler';
 
 export default {
   name: 'Map',
@@ -50,13 +51,14 @@ export default {
         });
     },
     resolveError(errorkey) {
-      this.$store.dispatch('resolveErrors', [errorkey]);
+      this.$store.dispatch('RESOLVE_ERRORS', [errorkey]);
     },
   },
   mounted() {
     this.login();
-    this.$store.dispatch('getEvents', { first: 10 });
+    this.$store.dispatch('GET_EVENTS');
     document.cookie = `timezone=${Intl.DateTimeFormat().resolvedOptions().timeZone}`;
+    // connectEventActions(this.$store);
   },
 };
 </script>

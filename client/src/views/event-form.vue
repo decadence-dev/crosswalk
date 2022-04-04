@@ -6,7 +6,7 @@ import EventType from '../components/eventtype.vue';
 import CloseIcon from '../icons/close.vue';
 
 export default {
-  name: 'CreateForm',
+  name: 'EventForm',
   components: {
     Textarea, Input, CloseIcon, EventType, Button,
   },
@@ -27,21 +27,24 @@ export default {
       this.validateRequired('address');
       this.validateRequired('eventType');
       if (!this.hasErrors) {
-        const actionType = this.$route.params.id != null ? 'updateEvent' : 'createEvent';
+        const actionType = this.$route.params.id != null ? 'UPDATE_EVENT' : 'CREATE_EVENT';
         this.$store.dispatch(actionType);
       } else {
-        this.$store.dispatch('updateErrors', ['Please resolve form errors before submit']);
+        this.$store.dispatch('UPDATE_ERRORS', ['Please resolve form errors before submit']);
       }
     },
     getEvent() {
       if (this.$route.params.id != null) {
-        this.$store.dispatch('getEvent', { id: this.$route.params.id });
+        this.$store.dispatch('GET_EVENT', { id: this.$route.params.id });
       } else {
-        this.$store.dispatch('resetEvent');
+        this.$store.dispatch('RESET_EVENT');
       }
     },
     validateRequired(name) {
-      if (this.$store.state.event[name] == null || this.$store.state.event[name].trim() === '') {
+      const value = this.$store.state.event[name];
+      const isEmptyString = typeof value === 'string' && value.trim();
+      const isEmptyArray = Array.isArray(value) && value.length === 0;
+      if (this.$store.state.event[name] == null || (isEmptyString && isEmptyArray)) {
         this.errors = [...this.errors, ...[name]];
       } else {
         this.errors = this.errors.filter((error) => error !== name);
@@ -94,7 +97,6 @@ export default {
             @blur="validateRequired('eventType', $event.target.value)"
             id="eventType"
             class="field__input"
-            name="eventType"
             v-model="event.eventType"
         ></EventType>
         <small class="field__error">

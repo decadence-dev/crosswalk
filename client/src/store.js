@@ -20,8 +20,10 @@ const client = new ApolloClient({
   cache: new InMemoryCache(),
 });
 
+const EVENTS_LIMIT = 10;
+
 const EVENT_QUERY = gql`
-  query getEvent($id: ID!) {
+  query getEvent($id: UUID!) {
     event(id: $id) {
       id
       eventType
@@ -38,18 +40,14 @@ const EVENT_QUERY = gql`
 `;
 
 const EVENTS_QUERY = gql`
-  query geteEvents($search: String, $first: Int, $after: String) {
-    events (search: $search, first: $first, after: $after) {
-      pageInfo {
-        endCursor
-        hasNextPage
-      }
-      edges{
-        node {
-          id
-          address
-          eventType
-        }
+  query geteEvents($search: String, $limit: Int, $offset: Int) {
+    events (search: $search, limit: $limit, offset: $offset) {
+      count
+      hasNext
+      items{
+        id
+        address
+        eventType
       }
     }
   }
@@ -57,14 +55,14 @@ const EVENTS_QUERY = gql`
 
 const EVENT_CREATE_MUTATION = gql`
   mutation createEvent(
-    $eventType: EventType!, 
+    $eventType: [String]!, 
     $address: String!, 
     $longitude: Float!, 
     $latitude: Float!,
     $description: String
   ) {
     createEvent (
-      input: { 
+      data: { 
         eventType: $eventType, 
         address: $address, 
         longitude: $longitude, 
@@ -86,16 +84,16 @@ const EVENT_CREATE_MUTATION = gql`
 
 const EVENT_UPDATE_MUTATION = gql`
   mutation updateEvent(
-    $id: ID!,
-    $eventType: EventType!, 
+    $id: UUID!,
+    $eventType: [String]!, 
     $address: String!, 
     $longitude: Float!, 
     $latitude: Float!,
     $description: String
   ) {
     updateEvent (
-      input: { 
-        id: $id,
+      id: $id,
+      data: {
         eventType: $eventType, 
         address: $address, 
         longitude: $longitude, 
@@ -116,8 +114,8 @@ const EVENT_UPDATE_MUTATION = gql`
 `;
 
 const EVENT_DELETE_MUTATION = gql`
-  mutation deleteEvent($id: ID!) {
-    deleteEvent(input: {id: $id}) {
+  mutation deleteEvent($id: UUID!) {
+    deleteEvent(id: $id) {
       id
     }
   }
@@ -126,102 +124,133 @@ const EVENT_DELETE_MUTATION = gql`
 export default {
   state: {
     event: {},
-    hasNextPage: false,
-    endCursor: 0,
+    hasNext: false,
+    count: 0,
+    offset: EVENTS_LIMIT,
     globalErrors: [],
     events: [],
     pageInfo: {},
   },
   mutations: {
     /* eslint-disable */
-    setEvent(state, event) {
+    SET_EVENT(state, event) {
       state.event = event;
     },
-    updateErrors(state, messages) {
+    UPDATE_ERRORS(state, messages) {
       const errs = messages.map((error) => ({key: uuid4(), message: error}))
       state.globalErrors = [...state.globalErrors, ...errs]
     },
-    resolveErrors(state, keys) {
+    RESOLVE_ERRORS(state, keys) {
       state.globalErrors = state.globalErrors.filter((error) => !keys.includes(error.key))
     },
-    insertEvent(state, event) {
+    INSERT_EVENT_DATA(state, event) {
       state.events = [...[event], ...state.events]
     },
-    updateeEvent(state, event) {
+    UPDATE_EVENT_DATA(state, event) {
       state.events = [...[event], ...state.events.filter((evt) => evt.id !== event.id)]
     },
-    removeEvent(state, id) {
+    REMOVE_EVENT_DATA(state, id) {
       state.events = state.events.filter((evt) => evt.id !== id)
     },
-    setEvents(state, data) {
-      state.events = data.events.edges.map((edge) => (edge.node));
-      state.hasNextPage = data.events.pageInfo.hasNextPage;
-      state.endCursor = data.events.pageInfo.endCursor;
+    SET_EVENTS(state, data) {
+      state.offset = EVENTS_LIMIT
+      state.events = data.events.items
+      state.hasNext = data.events.hasNext;
+      state.count = data.events.count;
     },
-    updateEvents(state, data) {
-      state.events = [...state.events, ...data.events.edges.map((edge) => (edge.node))];
-      state.hasNextPage = data.events.pageInfo.hasNextPage;
-      state.endCursor = data.events.pageInfo.endCursor;
+    UPDATE_EVENTS_LIST(state, data) {
+      state.offset += EVENTS_LIMIT;
+      state.events = [...state.events, ...data.events.items];
+      state.hasNext = data.events.hasNext;
+      state.count = data.events.count;
     },
     /* eslint-enable */
   },
   actions: {
-    async getEvent({ commit }, variables) {
+    async GET_EVENT({ commit }, variables) {
       const response = await client.query({ query: EVENT_QUERY, variables });
-      commit('setEvent', response.data.event);
+      commit('SET_EVENT', response.data.event);
     },
-    async resetEvent({ commit }) {
-      commit('setEvent', {});
+    async RESET_EVENT({ commit }) {
+      commit('SET_EVENT', {});
     },
-    async getEvents({ commit }, variables = {}) {
-      const response = await client.query({ query: EVENTS_QUERY, variables });
-      commit('setEvents', response.data);
+    async GET_EVENTS({ commit }, variables = {}) {
+      const response = await client.query({
+        query: EVENTS_QUERY,
+        variables: { limit: EVENTS_LIMIT, ...variables },
+      });
+      commit('SET_EVENTS', response.data);
     },
-    async fetchMoreEvents({ commit }, variables = {}) {
-      const response = await client.query({ query: EVENTS_QUERY, variables });
-      commit('updateEvents', response.data);
+    async FETCH_MORE_EVENTS({ commit, state }, variables = {}) {
+      const response = await client.query({
+        query: EVENTS_QUERY,
+        variables: {
+          limit: EVENTS_LIMIT,
+          offset: state.offset,
+          ...variables,
+        },
+      });
+      commit('UPDATE_EVENTS_LIST', response.data);
     },
-    async createEvent({ commit, state }) {
+    async CREATE_EVENT({ commit, state }) {
       await client.mutate({
         mutation: EVENT_CREATE_MUTATION,
         variables: { ...state.event, longitude: 0.0, latitude: 0.0 },
       }).then((response) => {
         const event = response.data.createEvent;
-        commit('insertEvent', event);
         router.push({ name: 'detail', params: { id: event.id } });
       }).catch((errors) => {
         const errs = errors.networkError.result.errors.map((error) => (error.message));
-        commit('updateErrors', errs);
+        commit('UPDATE_ERRORS', errs);
       });
     },
-    async updateEvent({ commit, state }) {
+    async UPDATE_EVENT({ commit, state }) {
       await client.mutate({
         mutation: EVENT_UPDATE_MUTATION,
         variables: { ...state.event },
       }).then((response) => {
         const event = response.data.updateEvent;
-        commit('updateeEvent', event);
         router.push({ name: 'detail', params: { id: event.id } });
       }).catch((errors) => {
         const errs = errors.networkError.result.errors.map((error) => (error.message));
-        commit('updateErrors', errs);
+        commit('UPDATE_ERRORS', errs);
       });
     },
-    async deleteEvent({ commit, state }) {
+    async DELETE_EVENT({ state }) {
       await client.mutate({
         mutation: EVENT_DELETE_MUTATION,
         variables: { id: state.event.id },
-      }).then((response) => {
-        const { id } = response.data.deleteEvent;
-        commit('removeEvent', id);
+      }).then(() => {
         router.push({ name: 'map' });
       });
     },
-    async updateErrors({ commit }, errors) {
-      commit('updateErrors', errors);
+    async UPDATE_ERRORS({ commit }, errors) {
+      commit('UPDATE_ERRORS', errors);
     },
-    async resolveErrors({ commit }, errors) {
-      commit('resolveErrors', errors);
+    async RESOLVE_ERRORS({ commit }, errors) {
+      commit('RESOLVE_ERRORS', errors);
+    },
+    async RECEIVE_EVENT_ACTION({ commit }, data) {
+      switch (data.status) {
+        case 1:
+          commit('INSERT_EVENT_DATA', data.event);
+          break;
+        case 2:
+          commit('UPDATE_EVENT_DATA', data.event);
+          break;
+        case 3:
+          commit('REMOVE_EVENT_DATA', data.id);
+          break;
+        case 4:
+          break;
+        case 5:
+          commit('UPDATE_ERRORS', [data.errors]);
+          break;
+        default:
+          /* eslint-disable */
+          console.warn(data);
+          /* eslint-enable */
+      }
     },
   },
 };

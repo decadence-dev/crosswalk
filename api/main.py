@@ -1,29 +1,18 @@
-import os
 from datetime import datetime, timedelta
 
 import graphene
 from fastapi import Cookie, Depends, FastAPI, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from graphql.execution.executors.asyncio import AsyncioExecutor
 from jose import JWTError, jwt
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from starlette import status
-from starlette.graphql import GraphQLApp
+from starlette.graphql import AsyncioExecutor, GraphQLApp
 from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 
 from mutations import Mutation
 from queries import Query
-
-AUTH_EXPIRATION_MINUTES = os.getenv("AUTH_EXPIRATION_MINUTES", 60)
-DEBUG = os.getenv("DEBUG", "True").lower() == "true"
-SECRET_KEY = os.getenv("SECRET_KEY", "secret")
-DATABASE_HOST = os.getenv("DATABASE_HOST", "localhost")
-DATABASE_PORT = os.getenv("DATABASE_PORT", 27017)
-DATABASE_NAME = os.getenv("DATABASE_NAME", "crosswalk")
-
-ORIGINS = ["*"]
-
+from settings import settings
 
 app = FastAPI()
 
@@ -34,7 +23,9 @@ async def get_current_user_creadentials(
     credentials: HTTPAuthorizationCredentials = Depends(security),
 ):
     try:
-        data = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=["HS256"])
+        data = jwt.decode(
+            credentials.credentials, settings.secret_key, algorithms=["HS256"]
+        )
         if datetime.fromtimestamp(data["exp"]) <= datetime.now():
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Token is expired"
@@ -46,9 +37,9 @@ async def get_current_user_creadentials(
 
 async def get_db():
     client = AsyncIOMotorClient(
-        DATABASE_HOST, DATABASE_PORT, uuidRepresentation="standard"
+        settings.database_host, settings.database_port, uuidRepresentation="standard"
     )
-    yield client[DATABASE_NAME]
+    yield client[settings.database_name if not settings.test else "test"]
     client.close()
 
 
@@ -78,7 +69,7 @@ class MiddlewareSchema(graphene.Schema):
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ORIGINS,
+    allow_origins=settings.origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -110,11 +101,11 @@ async def main(
 
 @app.post("/token")
 async def get_token():
-    if not DEBUG:
+    if not settings.debug:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
     payload = {
         "id": "00000000-0000-0000-0000-000000000000",
         "username": "mockuser",
-        "exp": datetime.now() + timedelta(minutes=AUTH_EXPIRATION_MINUTES),
+        "exp": datetime.now() + timedelta(minutes=settings.auth_expiration_minutes),
     }
-    return jwt.encode(payload, SECRET_KEY, algorithm="HS256")
+    return jwt.encode(payload, settings.secret_key, algorithm="HS256")

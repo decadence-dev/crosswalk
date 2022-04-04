@@ -3,35 +3,18 @@ import { mapState } from 'vuex';
 import Input from './input.vue';
 import Button from './button.vue';
 
-const EVENT_TYPE_MAP = {
-  ROBBERY: 'Robbery',
-  FIGHT: 'Fight',
-  DEATH: 'Death',
-  GUN: 'Gun',
-  INADEQUATE: 'Inadequate',
-  ACCEDENT: 'Accedent',
-  FIRE: 'Fire',
-  POLICE: 'Police',
-};
-
 export default {
   name: 'EventsList',
   components: {
     Input, Button,
   },
   computed: {
-    ...mapState({
-      events: (state) => state.events.map(
-        (event) => ({
-          ...event, eventType: EVENT_TYPE_MAP[event.eventType],
-        }),
-      ),
-    }),
+    ...mapState(['events']),
     hasEvents() {
       return this.$store.state.events.length !== 0;
     },
     hasNext() {
-      return this.$store.state.hasNextPage;
+      return this.$store.state.hasNext;
     },
     query: {
       get() {
@@ -45,21 +28,11 @@ export default {
   methods: {
     searchSubmit(e) {
       e.preventDefault();
-      this.$store.dispatch(
-        'getEvents',
-        { ...this.query, first: 10 },
-      );
+      this.$store.dispatch('GET_EVENTS', this.query);
     },
     fetchMore(e) {
       e.preventDefault();
-      this.$store.dispatch(
-        'fetchMoreEvents',
-        {
-          ...this.query,
-          after: this.$store.state.endCursor,
-          first: 10,
-        },
-      );
+      this.$store.dispatch('FETCH_MORE_EVENTS', this.query);
     },
   },
 };
@@ -89,9 +62,9 @@ export default {
         <span class="item__name">
           {{ event.address }}
         </span>
-        <span class="item__address">
-          {{ event.eventType }}
-        </span>
+        <div class="item__address">
+          <span v-bind:key="idx" v-for="(typeName, idx) in event.eventType">{{ typeName }}</span>
+        </div>
         <router-link
             :to="{ name: 'detail', params: { id: event.id }}"
             v-slot="{href, navigate}"
