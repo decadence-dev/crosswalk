@@ -1,7 +1,7 @@
 # crosswalk
 
 ## Description
-Crosswalk is a microservices social network project.
+Crosswalk is a microservices-based social network project.
 
 ## Launching
 ### Installation
